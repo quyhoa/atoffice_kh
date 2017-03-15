@@ -1,0 +1,743 @@
+<?php
+
+function db_get_all($sql, $db){
+	$result = mysql_query($sql, $db);
+	while($item = mysql_fetch_assoc($result)){
+		$rows[]=$item;
+	}
+	return $rows;
+
+}
+	require_once("../at_office_config.php");
+	if(!isset($mysql_db)) $mysql_db="at_office";
+	require_once 'HTTP.php';
+
+	global $mysql_addr;
+	global $port;
+	global $user;
+	global $pass;
+
+	$db = mysql_connect("$mysql_addr:$port", $user, $pass);
+	if ($db == false)
+	{
+		print "sql connect error";
+		exit(1);
+	}
+	mysql_select_db($mysql_db,$db) or die("sql database select error");
+
+	mysql_query("SET NAMES 'utf8'");
+
+// POST　data
+
+	//var_dump($_REQUEST);
+
+
+	session_start();
+	$u = $_SESSION['u'];
+	if(!$u){
+		print "ログインしてください。";
+		exit();
+	}
+
+	$sql = "select * from c_member where c_member_id = '$u'";
+	$c_member = db_get_all($sql, $db);
+	$c_member = $c_member[0];
+
+	if($_REQUEST['sort1']){
+		$sort1 = $_REQUEST['sort1'];
+	}elseif($_REQUEST['amp;sort1']){
+		$sort1 = $_REQUEST['amp;sort1'];
+	}
+
+	if(!is_null($_REQUEST['sort2'])){
+		$sort2 = $_REQUEST['sort2'];
+	}elseif(!is_null($_REQUEST['amp;sort2'])){
+		$sort2 = $_REQUEST['amp;sort2'];
+	}elseif(is_null($_REQUEST['sort2']) or is_null($_REQUEST['amp;sort2'])){
+		$sort2 = 1;
+	}
+
+	if($_REQUEST['sort3']){
+		$sort3 = $_REQUEST['sort3'];
+	}elseif($_REQUEST['amp;sort3']){
+		$sort3 = $_REQUEST['amp;sort3'];
+	}
+
+	if($_REQUEST['amp;index']){
+		$index=$_REQUEST['amp;index'];
+	}else{
+		$index=0;
+	}
+
+
+
+// 予約データ総数
+	$sql = "select count(reserve_id) as reserve_num from a_reserve_list where c_member_id = '$u' ";
+
+	if($sort3==1){
+		$sql.="and tmp_flag='1' and cancel_flag='0' and complete_flag='0' ";
+	}elseif($sort3==2){
+		$sql.="and tmp_flag='0' and cancel_flag='0' and complete_flag='0' and pay_flag='0' and pay_money='0' ";
+	}elseif($sort3==3){
+		$sql.="and tmp_flag='0' and cancel_flag='0' and complete_flag='0' and pay_flag='0' and pay_money>'0' ";
+	}elseif($sort3==4){
+		$sql.="and tmp_flag='0' and cancel_flag='0' and complete_flag='0' and pay_flag='1' ";
+	}elseif($sort3==5){
+		$sql.="and cancel_flag='0' and complete_flag='1' ";
+	}elseif($sort3==6){
+		$sql.="and cancel_flag='1' and complete_flag='0' ";
+	}
+
+
+	$reserve_num = db_get_all($sql, $db);
+	$reserve_num = $reserve_num[0]['reserve_num'];
+	
+// 予約データ
+
+	$sql = "select * from a_reserve_list where c_member_id = '$u' ";
+
+	if($sort3==1){
+		$sql.="and tmp_flag='1' and cancel_flag='0' and complete_flag='0' ";
+	}elseif($sort3==2){
+		$sql.="and tmp_flag='0' and cancel_flag='0' and complete_flag='0' and pay_flag='0' and pay_money='0' ";
+	}elseif($sort3==3){
+		$sql.="and tmp_flag='0' and cancel_flag='0' and complete_flag='0' and pay_flag='0' and pay_money>'0' ";
+	}elseif($sort3==4){
+		$sql.="and tmp_flag='0' and cancel_flag='0' and complete_flag='0' and pay_flag='1' ";
+	}elseif($sort3==5){
+		$sql.="and cancel_flag='0' and complete_flag='1' ";
+	}elseif($sort3==6){
+		$sql.="and cancel_flag='1' and complete_flag='0' ";
+	}
+
+
+	if($sort1==0){
+		$sql.= "order by tmp_reserve_datetime ";
+	}else{
+		$sql.= "order by begin_datetime ";
+	}
+	if($sort2){
+		$sql.= "desc ";
+	}
+
+	$sql.= "limit ".$index.", 10";
+
+	$result = db_get_all($sql, $db);
+
+if($result){
+	foreach($result as $key=>$value){
+
+		// 利用日から2営業日以上前か
+		$limit = get_business_days(2, $db);
+		$dt = new DateTime($limit);
+		$limit_num = $dt->format("YmdHis");
+		$dt = new DateTime($value['begin_datetime']);
+		$begin_num = $dt->format("YmdHis");
+
+		if($value['cancel_flag']==0 and $value['complete_flag']==0 and $limit_num <= $begin_num and $value['pay_money']==0){
+			$result[$key]['change_ok'] = 1;
+		}else{
+			$result[$key]['change_ok'] = 0;
+		}
+		// 日付書式
+		$dt = new DateTime($value['tmp_reserve_datetime']);
+		$result[$key]['tmp_reserve_datetime'] = $dt->format("Y年m月d日 H時i分s秒");
+		$dt = new DateTime($value['reserve_datetime']);
+		$result[$key]['reserve_datetime'] = $dt->format("Y年m月d日 H時i分s秒");
+	if($value['pay_checkdate']!='0000-00-00 00:00:00'){
+		$dt = new DateTime($value['pay_checkdate']);
+		$result[$key]['pay_checkdate'] = $dt->format("Y年m月d日");
+	}else{
+		$result[$key]['pay_checkdate'] = 0;
+	}
+		$dt = new DateTime($value['begin_datetime']);
+        $wweek = get_week($dt->format("Ymd"));
+		$result[$key]['begin'] = $dt->format("Y年m月d日(".$wweek.")");
+		$result[$key]['begin_datetime'] = $dt->format("H時i分");
+		$dt = new DateTime($value['finish_datetime']);
+		$result[$key]['finish_datetime'] = $dt->format("H時i分");
+		if($value['pay_limitdate']!='0000-00-00 00:00:00'){
+			$dt = new DateTime($value['pay_limitdate']);
+			$result[$key]['pay_limitdate'] = $dt->format("Y年m月d日");
+			if($value['pay_flag']==0 and $value['cancel_flag']==0 and $value['complete_flag']==0){
+			$s = mktime(0,0,0,$dt->format("m"),$dt->format("d"),$dt->format("Y")) - mktime(0,0,0,date("m"),date("d"),date("Y"));
+			$result[$key]['pay_limit'] = ($s/60/60/24);
+			}
+		}else{
+			$result[$key]['pay_limitdate'] = 0;
+			$result[$key]['pay_limit'] = 0;
+		}
+		$dt = new DateTime($value['receipt_datetime']);
+		$result[$key]['receipt_datetime'] = $dt->format("Y年m月d日 H時i分s秒");
+
+
+		// 会場
+		$sql = "select * from a_hall where hall_id = ".$value['hall_id'];
+		$hall_data = db_get_all($sql, $db);
+		$result[$key]['hall_data'] = $hall_data[0];
+		// 部屋
+		$sql = "select * from a_room where hall_id = ".$value['hall_id']." and room_id = ".$value['room_id'];
+		$room_data = db_get_all($sql, $db);
+		$result[$key]['room_data'] = $room_data[0];
+
+		//備品
+		$sql = "select * from a_reserve_v where reserve_id = ".$value['reserve_id']." and cancel_flag = 0";
+		$reserve_v_list = db_get_all($sql, $db);
+		$cancel_vessel_price = 0;
+	if($reserve_v_list){
+		foreach($reserve_v_list as $k=>$v){
+			$sql = "select * from a_vessel_data where vessel_id = ".$v['vessel_id'];
+			$vessel_data = db_get_all($sql, $db);
+			$vessel_data = $vessel_data[0];
+
+			$reserve_v_list[$k]['vessel_name'] = $vessel_data['vessel_name'];
+			$reserve_v_list[$k]['memo'] = $vessel_data['memo2'];
+			$cancel_vessel_price += $vessel_data['price']*$v['num'];
+		}
+	}else{
+			$reserve_v_list = 0;
+	}
+		$result[$key]['reserve_v_list'] = $reserve_v_list;
+
+		//サービス
+		$sql = "select * from a_reserve_s where reserve_id = ".$value['reserve_id']." and cancel_flag = 0";
+		$reserve_s_list = db_get_all($sql, $db);
+		$cancel_service_price = 0;
+	if($reserve_s_list){
+		foreach($reserve_s_list as $k=>$v){
+			$sql = "select * from a_service_data where service_id = ".$v['service_id'];
+			$service_data = db_get_all($sql, $db);
+			$service_data = $service_data[0];
+			$reserve_s_list[$k]['service_name'] = $service_data['service_name'];
+			$reserve_s_list[$k]['memo'] = $service_data['memo2'];
+			if($service_data['cancel_mode']==1){
+				$cancel_service_price += $service_data['price']*$v['num'];
+			}
+		}
+	}else{
+		$reserve_s_list = 0;
+	}
+		$result[$key]['cancel_vessel_price'] = $cancel_vessel_price;
+		$result[$key]['cancel_service_price'] = $cancel_service_price;
+		$result[$key]['reserve_s_list'] = $reserve_s_list;
+
+		// キャンセル料計算
+		$result[$key]['cancel_list'] = get_cancel_list($value['reserve_id'], $db);
+		// キャンセル料
+		$result[$key]['cancel_price'] = round(($value['room_price']+$cancel_vessel_price+$cancel_service_price)*($result[$key]['cancel_list']['percent']*0.01));
+
+		// キャンセルなら
+		if($value['cancel_flag']){
+			$sql = "select * from a_amount_billed where reserve_id = '".$value['reserve_id']."' and info='キャンセル料金'";
+			$result[$key]['ab_data'] = db_get_all($sql, $db);
+			$result[$key]['ab_data'] = $result[$key]['ab_data'][0];
+			$sql = "select * from a_repayment_list where reserve_id = '".$value['reserve_id']."' and info='入金後キャンセルの差額'";
+			$result[$key]['repay_data'] = db_get_all($sql, $db);
+			$result[$key]['repay_data'] = $result[$key]['repay_data'][0];
+		}
+
+	}// foreach
+
+}// if result
+
+	$reserve_list = $result;
+
+function get_cancel_list($reserve_id, $db){
+
+	$sql = "select hall_id, room_id, begin_datetime from a_reserve_list where reserve_id = $reserve_id";
+	$reserve_data = db_get_all($sql, $db);
+	$hall_id = $reserve_data[0]['hall_id'];
+	$room_id = $reserve_data[0]['room_id'];
+
+	$sql = "select cancel from a_room where hall_id = $hall_id and room_id = $room_id";
+	$cancel = db_get_all($sql, $db);
+	$cancel = $cancel[0]['cancel'];
+
+	$sql = "select * from a_cancel_charge where hall_id = $hall_id and pattern_id = $cancel";
+	$cancel_list = db_get_all($sql, $db);
+	$cancel_list = $cancel_list[0];
+
+
+	// 何日前か
+	$dt = new DateTime($reserve_data[0]['begin_datetime']);
+	$s = mktime(0,0,0,$dt->format("m"),$dt->format("d"),$dt->format("Y")) - mktime(0,0,0,date("m"),date("d"),date("Y"));
+	$before = ($s/60/60/24)+1;
+
+	$percent = $cancel_list['percent1'];
+	if($cancel_list['day2'] and $cancel_list['day2']>=$before){
+		$percent = $cancel_list['percent2'];
+	}
+	if($cancel_list['day3'] and $cancel_list['day3']>=$before){
+		$percent = $cancel_list['percent3'];
+	}
+	if($cancel_list['day4'] and $cancel_list['day4']>=$before){
+		$percent = $cancel_list['percent4'];
+	}
+	if($cancel_list['day5'] and $cancel_list['day5']>=$before){
+		$percent = $cancel_list['percent5'];
+	}
+	$cancel_list['before'] = $before;
+	$cancel_list['percent'] = $percent;
+
+	return($cancel_list);
+
+}
+
+function get_business_days($days, $db){
+	$year = date("Y");
+	$month = date("m");
+	$day = date("d");
+
+
+	// 予約最短日に修正(3日後)
+	$count=1;
+
+	while($count<=$days){
+		$day++;
+		if(!checkdate($month, $day, $year)){
+			$month++;
+			$day=1;
+			if(!checkdate($month, $day, $year)){
+				$year++;
+				$month=1;
+			}
+		}
+		// 土日を飛ばす
+		$week = date(w,mktime(0,0,0,$month,$day,$year));
+		if($week!=0 and $week!=6){
+			// 祝日を飛ばす
+			$sql = "select * from c_holiday where month = $month and day = $day";
+			$result = db_get_all($sql, $db);
+			if(!$result){
+				//print "$month / $day<br>";
+				$count++;
+			}
+		}
+	}
+
+	return("$year-$month-$day 00:00:00");
+
+}
+
+function get_week($date){
+    $sday = strtotime($date);
+    $res = date("w", $sday);
+    $day = array("日", "月", "火", "水", "木", "金", "土");
+    return $day[$res];
+}
+
+?>
+
+<head>
+<script type="text/javascript" src="./atoffice/js/prototype.js"></script>
+<script type="text/javascript" src="./atoffice/js/smartRollover.js"></script>
+<script type="text/javascript" src="./atoffice/js/scriptaculous.js?load=effects,builder"></script>
+<script type="text/javascript" src="./atoffice/js/highslide.js"></script>
+<script type="text/javascript">
+  hs.graphicsDir = 'http://www.at-office.co.jp/highslide/graphics/';
+  hs.outlineType = 'rounded-white';
+  window.onload = function() {
+  hs.preloadImages(5);
+      }
+
+</script>
+<link href="./atoffice/css/style.css" rel="stylesheet" type="text/css" />
+
+</head>
+<body>
+
+
+<h2><b><?php print $c_member['nickname']; ?>さんの予約情報 (<?php print $reserve_num; ?>件
+
+<?php 
+	if($reserve_num > 0){
+?>
+中　<?php print $index+1; ?>件～
+<?php 
+	if($index+10 > $reserve_num){
+		print $reserve_num;
+	}else{
+		print $index+10;
+	}
+?>件
+
+<?php 
+	}
+?>
+
+)</b></h2>
+
+<br>
+<table width=600>
+<tr>
+<td style="text-align:right;">
+
+<form method="POST" name="search" id="search" action="./">
+<input type="hidden" name="page" value="reserved_info">
+<input type="hidden" name="sort1" value="<?php print $sort1; ?>">
+<input type="hidden" name="sort2" value="<?php print $sort2; ?>">
+<input type="hidden" name="sort3" value="<?php print $sort3; ?>">
+<input type='hidden' name='index' value="">
+
+<?php
+//$reserve_num = 150;
+if($index < 90){
+	$start_page = 1;
+	$end_page = ($reserve_num+10)/10;
+	if($end_page>10){
+		$end_page = 11;
+	}
+}elseif($index >= $reserve_num-50){
+	$start_page = ceil((($reserve_num+10)/10)-10);
+	$end_page = ceil(($reserve_num+10)/10);
+}else{
+	$start_page = (($index+10)/10)-5;
+	$end_page = (($index+10)/10)+5;
+}
+
+//print "$a >>>>> $start_page >>> $end_page<br>";
+
+if($start_page<=0){
+	$start_page = 1;
+}
+
+for($x=$start_page;$x<$end_page;$x++){
+	if( (($x*10)-10)==$index){
+			print "<span style='border:3px ridge;background:#FF1111;color:#FFFFFF; padding:3px; font-weight:bold;'>$x</span>";
+		}else{
+			print "<input type='button' value='$x' onClick=set_index(".(($x*10)-10).") style='border:3px ridge;background:#090;color:#fff; padding:3px; font-weight:bold;'>";
+	}
+}
+
+
+
+?>
+
+</form>
+
+</td>
+</tr>
+</table>
+
+<br>
+<?php
+//$_SESSION['u'] = $u;
+//var_dump($_SESSION);
+
+if($reserve_list){
+	foreach($reserve_list as $key=>$value){
+		$code = "<table width=600>";
+
+		$code.= "<tr>";
+		$code.= "<td colspan=4 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#FFE6DC;'>";
+		$code.= "<b>■　予約ID：".$value['reserve_id']."　■</b>";
+		$code.= "</td>";
+		$code.= "</tr>";
+
+		$code.= "<tr>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>予約日</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>".$value['tmp_reserve_datetime']."</td>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>予約状態</td>";
+		$code.= "<td style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'><b>";
+
+		if($value['complete_flag']==1){
+			$code.= "完了";
+		}elseif($value['cancel_flag']==1){
+			$code.= "キャンセル";
+		}elseif($value['tmp_flag'] and $value['cancel_flag']==0){
+			$code.= "仮予約";
+		}elseif($value['tmp_flag']==0 and $value['pay_flag']==0 and $value['pay_money']==0){
+			$code.="未入金";
+		}elseif($value['tmp_flag']==0 and $value['pay_flag']==0 and $value['pay_money']){
+			$code.="一部入金<br>(".number_format($value['pay_money'])."円)";
+		}elseif($value['tmp_flag']==0 and $value['pay_flag']==1){
+			$code.="支払い済み";
+		}else{
+			$code.="???";
+		}
+		$code.= "</b></td>";
+		$code.= "</tr>";
+
+		$code.= "<tr>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>施設名</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>".$value['hall_data']['hall_name']."</td>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>部屋名</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>".$value['room_data']['room_name']."</td>";
+		$code.= "</tr>";
+
+		$code.= "<tr>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;' rowspan=2>看板編集</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;' rowspan=2>";
+
+		if($value['cancel_flag'] or $value['complete_flag']){
+			$code.="--";
+		}else{
+		if($value['hall_data']['kanban']){
+			$code.= "<b><span style='color:#FF9900;'>※ 当会場の部屋入口看板は<br>セルフサービスです。</span></b><br>";
+		}
+
+	$code.= "<form name='update_kanban' method='POST' action='./atoffice/pages/do/update_kanban.php'>";
+		$code.= "<input type='hidden' name='reserve_id' id='reserve_id' value='".$value['reserve_id']."'>";
+		//$code.= "<input type='text' name='kanban' maxlength='14' id='kanban' value=\"".$value['kanban']."\" size=30>";
+		$code.= "<textarea id=kanban name=kanban onKeyUp=\"limitChars(this,100)\" rows=\"3\" cols=\"40\">".$value['kanban']."</textarea><br>";
+		$code.= "<input type='submit' value='　更新　'>";
+	$code.= "</form>";
+
+		}
+
+		$code.= "</td>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>看板印刷</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>";
+
+		if($value['cancel_flag']==0 and $value['complete_flag']==0){
+
+		$code.= "<INPUT type='button' onclick=newwinprint('".urlencode($value['kanban'])."') value='　印刷　'>";
+
+		}else{
+			$code.= "--";
+		}
+
+		$code.= "</td>";
+		$code.= "</tr>";
+
+		$code.= "<tr>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>備品変更</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>";
+
+		if($value['change_ok']){
+
+		$code.= "<form name='change_vessel' method='POST' action='./'>";
+		$code.= "<input type='hidden' name='reserve_id' id='reserve_id' value='".$value['reserve_id']."'>";
+		$code.= "<input type='hidden' name='page' id='page' value='change_vessel'>";
+		$code.= "<input type='submit' value='備品変更'><br>";
+		$code.= "</form>";
+		$code.= "入金後の変更につきましてはお電話にて受付になります。";
+		}else{
+			if($value['cancel_flag'] or $value['complete_flag']){
+				$code.="--";
+			}else{
+				$code.= "備品の変更受付はご利用日の<br>2営業日前までです。<br>";
+				$code.= "また、入金後の変更につきましてはお電話にてお願いいたします。";
+			}
+
+		}
+
+		$code.= "</td>";
+		$code.= "</tr>";
+
+
+		$code.= "<tr>";
+		$code.= "<td width=100 rowspan=3 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>ご利用日時</td>";
+		$code.= "<td width=200 rowspan=3 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>".$value['begin']."<br>".$value['begin_datetime']." ～ ".$value['finish_datetime']."<br>";
+
+		if($value['change_flag']){
+			$code.= "<span style='color:#FF0000;'><b>■ １回変更済み ■</b></span>";
+		}else{
+
+			if($value['reserve_s_list']){
+				$code.= "<span style='color:#FF0000;'><b>▼ サービス品のご注文がありますので、予約変更はお電話にて受け付けいたします。 ▼</b></span>";
+			}else{
+
+			if($value['change_ok']){
+			$code.= "<form name='change_reserve' method='POST' action='./'>";
+			$code.= "<input type='hidden' name='reserve_id' id='reserve_id' value='".$value['reserve_id']."'>";
+			$code.= "<input type='hidden' name='page' id='page' value='change_reserve'>";
+			$code.= "<input type='submit' value='日時・部屋変更'><br>";
+			$code.= "</form>";
+			$code.= "<span style='color:#FF0000;'>※ 変更は1回までキャンセル料無料</span><br>";
+			$code.= "<span style='color:#FF0000;'>※ ご利用日の2営業日前まで受付</span><br>";
+			$code.= "<span style='color:#FF0000;'>※ 入金後の変更はお電話にて受付になります。</span>";
+			}// change_ok
+			}// reserve_s_list
+		}
+
+
+		$code.= "</td>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>";
+		if($value['tmp_flag']){
+			$code.= "ご請求予定";
+		}else{
+			$code.= "ご請求";
+		}
+		$code.= "</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>";
+		$code.= number_format($value['total_price'])."円";
+		$code.= "</td>";
+		$code.= "</tr>";
+
+		$code.= "<tr>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>請求書印刷</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>";
+
+		if($value['tmp_flag']==0 and $value['cancel_flag']==0 and $value['complete_flag']==0){
+
+			$code.= "<form name='change_reserve' method='POST' action='./atoffice/pages/sub/pdf.php'>";
+			$code.= "<input type='hidden' name='reserve_id' id='reserve_id' value='".$value['reserve_id']."'>";
+			$code.= "<input type='submit' value='請求書印刷'><br>";
+			$code.= "</form>";
+
+		}else{
+			$code.= "--";
+		}
+
+		$code.="</td>";
+		$code.="</tr>";
+
+		$code.= "<tr>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>領収書印刷</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>";
+
+		if($value['cancel_flag']){
+			$code.="--";
+		}elseif($value['pay_flag']==1 and $value['receipt_flag']==0){
+
+			$code.= "<form name='change_reserve' method='POST' action='./atoffice/pages/sub/receipt.php'>";
+			$code.= "<input type='hidden' name='reserve_id' id='reserve_id' value='".$value['reserve_id']."'>";
+			$code.= "<input type='submit' value='領収書印刷'><br>";
+			$code.= "</form>";
+
+		}elseif($value['pay_flag']==1 and $value['receipt_flag']==1){
+			$code.= "<span style='color:#FF0000'><b>■ 印刷済みです ■</b></span><br>";
+			$code.= "印刷日<br>".$value['receipt_datetime'];
+		}else{
+			$code.= "ご入金確認後に1回印刷ができます。";
+		}
+
+		$code.="</td>";
+		$code.="</tr>";
+
+
+		$code.= "<tr>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>入金期限</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>";
+		if($value['pay_limitdate']){
+			$code.= $value['pay_limitdate'];
+			if($value['pay_limit']>=0){
+				if($value['pay_flag']==0 and $value['cancel_flag']==0 and $value['complete_flag']==0){
+					$code.= "(あと".$value['pay_limit']."日)";
+				}
+			}else{
+				$code.= "<span style='color:#FF0000;'><b>(期限超過)</b></span>";
+			}
+		}else{
+			$code.= "-- --";
+		}
+		$code.= "</td>";
+
+		$code.= "<td width=100 rowspan=3 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>キャンセル</td>";
+		$code.= "<td width=200 rowspan=3 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>";
+
+		if($value['complete_flag']==1){
+			$code.= "完了しています。";
+		}elseif($value['cancel_flag']==1){
+			$code.= "キャンセル済み<br>";
+
+			if($value['ab_data']){
+				$code.="<span style='color:#FF0000'>ｷｬﾝｾﾙ料請求（".number_format($value['ab_data']['total_billed_money'])."円）</span><br>";
+				if($value['ab_data']['flag']==0){
+					$code.="<b>未入金</b><br>";
+				}else{
+					$code.="<b>入金済み</b><br>";
+
+if($value['ab_data']['receipt_flag']==0){
+	$code.= "<form name='change_reserve' method='POST' action='./atoffice/pages/sub/cancel_receipt.php'>";
+	$code.= "<input type='hidden' name='billed_id' id='billed_id' value='".$value['ab_data']['billed_id']."'>";
+	$code.= "<input type='submit' value='ｷｬﾝｾﾙ料領収書'><br>";
+	$code.= "</form>";
+}elseif($value['ab_data']['receipt_flag']>0){
+	$code.= "<span style='color:#FF0000'><b>■ 領収書印刷済み ■</b></span>";
+}
+
+
+				}
+			}
+
+			if($value['repay_data']){
+$code.="<span style='color:#0000FF'>ｷｬﾝｾﾙ返金（".number_format($value['repay_data']['repayment_money'])."円）</span><br>";
+				if($value['repay_data']['flag']==0){
+					$code.="<b>未返金</b><br>";
+				}else{
+					$code.="<b>返金済み</b><br>";
+				}
+
+			}
+
+		}else{
+			if($value['tmp_flag']==1){
+				$code.= "仮予約のキャンセルは無料です。<br>";
+				$code.= "予約承認後になりますと、キャンセル料金が発生いたしますのでご了承ください。<br>";
+			}else{
+				$code.= "本日キャンセルしますと、<br>";
+				if($value['pay_money'] > $value['cancel_price']){
+					$code.= "【返金】　".number_format($value['pay_money']-$value['cancel_price'])."円<br>";
+				}else{
+					$code.= "【請求】　".number_format($value['cancel_price']-$value['pay_money'])."円<br>";
+				}
+				$code.= "となります。<br>";
+			}
+			$code.= "<form onSubmit='return cancel_confirm()' action='./'>";
+			$code.= "<input type='hidden' name='page' value='do_cancel_reserve'>";
+			$code.= "<input type='hidden' name='reserve_id' id='reserve_id' value='".$value['reserve_id']."'>";
+			$code.= "<input type='hidden' name='cancel_price' value='".$value['cancel_price']."'>";
+			$code.= "<input type='submit' value='キャンセルする'>";
+			$code.= "</form>";
+		}
+
+		$code.= "</td>";
+		$code.= "</tr>";
+
+
+		$code.= "<tr>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>入金額</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>";
+
+		if($value['pay_money']){
+			$code.= number_format($value['pay_money'])."円";
+		}else{
+			$code.= "-- --";
+		}
+
+		$code.= "</td>";
+		$code.= "</tr>";
+
+		$code.= "<tr>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>入金日</td>";
+		$code.= "<td width=200 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;'>";
+
+		if($value['pay_checkdate']){
+			$code.= $value['pay_checkdate'];
+		}else{
+			$code.= "-- --";
+		}
+		$code.="</td>";
+		$code.= "</tr>";
+
+		$code.="<tr>";
+		$code.= "<td width=100 style='border: 1px #565656 solid;text-align: center;vertical-align:middle;background-color:#E6FFDC;'>メッセージ</td>";
+		$code.="<td colspan=3 style='border: 1px #565656 solid;'>";
+		if($value['message']){
+			$code.=nl2br($value['message']);
+		}else{
+			$code.="<center>-- --</center>";
+		}
+		$code.="</td>";
+		$code.="</tr>";
+
+		$code.= "</table><br>";
+		print $code;
+	}
+}else{
+	print "<center>該当する予約情報は見つかりませんでした。</center>";
+}
+
+?>
+
+
+<div class="clr"></div>
+
+</div><!--kaijo_in_end-->
+</div><!--kaijo_bg_end-->
+
+
+
+</body>

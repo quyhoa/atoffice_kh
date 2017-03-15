@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis" />
+<meta name="description" content="研修、セミナー、会議、教室、イベントスペースなど多目的に使える東京都内の貸し会議室格安レンタル「アットビジネスセンター」" />
+<meta name="keywords" content="貸し,会議室,貸,レンタル,格安,駅前,池袋,アットビジネスセンター,研修,セミナー,会議,教室,イベント,スペース" />
+<title>貸し会議室レンタル格安｜駅前会議室アットビジネスセンター</title>
+<meta name="robots" content="noydir" />
+<meta name="robots" content="noodp" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<link href="./atoffice/css/style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<div id="container">
+<div id="header">
+<h1>アットビジネスセンター会場予約システム</h1>
+</div><!--heaer_end-->
+ <div id="menu">
+ <ul><li class="home"><a href="http://abc-kaigishitsu.com/">他の会場を探す</a></li></ul>
+ </div><!-- menu end -->
+
+<div id="main">
+<div id="contents">
+<h2>アットビジネスセンター会場予約システム</h2>
+<p>
+お得意様各位<br>
+本予約システムはシステム移行期間中につき、現在会員様のパスワード変更のみを受け付けております。<br>
+大変お手数をおかけいたしますが、会員様は右の枠に<br>
+<ol>
+<li>「<span style="{color:red;font-weight:bold;}">メールアドレス</span>」と「<span style="{color:red;font-weight:bold;}">仮のパスワード</span>（当社からのメールに記載）」を入力し、ログインしてください。</li>
+<li>手順に沿って「<span style="{color:red;font-weight:bold;}">秘密の答え</span>」を入力し設定。</li>
+<li>ご希望の「<span style="{color:red;font-weight:bold;}">パスワード</span>」を入力してください。</li>
+</ol>
+※パスワード発行手順の詳しい説明は<a href="http://abc-yoyaku.com/atoffice/pdf/pw_kirikae.pdf" target="_blank">【コチラ】</a><br>
+※ご不明な点は03-5465-5506(平日9時～18時)レンタル事業部までお電話ください。<br>
+<br>
+新予約システムの運営開始までは今まで通りの予約システム<a href="https://www.reserve1.jp/sisetu/visitor/login/reservesys/MLRX.php?office=1000473&grand=1&mngfg=3&selecode_rec=" target="_blank">【コチラ】</a>をご利用ください。
+
+
+</p>
+</div><!--contents_end-->
+
+<!--side-->
+<div id="side">
+<div class="member">会員向けサービス</div>
+<div class="login_name">ようこそゲストさん</div>
+<!--ログインボタン-->
+<div class="side_btn">
+<form action="./index.php" method="post" name="login" id="login">
+<input type="hidden" name="m" value="pc" />
+<input type="hidden" name="a" value="do_o_login" />
+<input type="hidden" name="login_params" value="?hid=3&amp;rid=1&amp;OpenPNEadmin=267h076dud6423u55foqn5msl1&amp;locale=ja-JP&amp;login_params=&amp;page=reserve&amp;hid=3&amp;rid=1&amp;rid_c=1" />
+<center>
+<span style="font-size: 8pt;">ID(ﾒｰﾙｱﾄﾞﾚｽ)：</span>
+<input type="text" class="input_text" name="username" id="username" tabindex="1" size=15 style="font:8pt;" />
+<br>
+<span style="font-size: 8pt;">パスワード：</span>
+<input type="password" class="input_text" name="password" id="password" tabindex="2" size=25 style="height:14px;font-size:6pt;" />
+<br>
+<input type="checkbox" class="input_checkbox" name="is_save" id="is_save" value="1" tabindex="3" /><label for="is_save">次回から自動的にログイン</label>
+
+<input type="submit" name="submit" value="ログイン" /><br>
+
+<span class="password_query"><a href="./?m=pc&amp;a=page_o_help_login_error">&gt;<span style="color: #0033FF;">"ログインできない方はこちら</span></a></span>
+<br>
+★アカウントをお持ちでない方★<br><a href="./?m=pc&amp;a=page_o_public_invite" id="button_new_regist"><span style="color: #FF0000;">新規会員登録</span></a>
+</form>
+</center>
+</div>
+<!--ログインボタン_end-->
+
+<div class="formember">
+<div class="formember_ttl">会員メリット</div>
+<div class="fmtext">
+1．予約入力が簡単<br />
+2．予約状況の確認が可能<br />
+3．会員自身による予約変更<br />
+4．領収書の自動発行
+</div>
+</div><!--formember_end-->
+
+</div><!--side end-->
+
+<div class="clr"></div>
+</div><!--main end-->
+
+<div id="footer">
+<p class="footer_adress">(c) at OFFICE Co.,Ltd. All rights reserved.</p>
+</div><!--footer end-->
+</div><!--container end-->
+</body>
+</html>

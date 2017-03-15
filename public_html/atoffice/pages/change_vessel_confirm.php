@@ -1,0 +1,172 @@
+<?php
+
+function db_get_all($sql, $db){
+	$result = mysql_query($sql, $db);
+	while($item = mysql_fetch_assoc($result)){
+		$rows[]=$item;
+	}
+	return $rows;
+
+}
+	require_once("../at_office_config.php");
+	if(!isset($mysql_db)) $mysql_db="at_office";
+	require_once 'HTTP.php';
+
+	global $mysql_addr;
+	global $port;
+	global $user;
+	global $pass;
+
+	$db = mysql_connect("$mysql_addr:$port", $user, $pass);
+	if ($db == false)
+	{
+		print "sql connect error";
+		exit(1);
+	}
+	mysql_select_db($mysql_db,$db) or die("sql database select error");
+
+	mysql_query("SET NAMES 'utf8'");
+
+
+	//var_dump($_REQUEST);
+
+/// 2013.12.21 消費税改定対応 begin
+//
+//	if(!$_REQUEST['PHPSESSID']){
+//		HTTP::redirect("error.php");
+//	}
+//
+/// 2013.12.21 消費税改定対応 end
+
+	if(preg_match("/^[0-9]+$/", $_REQUEST['amp;pre_id'])){
+		$pre_id = $_REQUEST['amp;pre_id'];
+	}else{
+		HTTP::redirect("error.php");
+	}
+
+// データ再構成
+	$sql = "select * from a_pre_reserve where pre_id = '$pre_id'";	$pre_data = db_get_all($sql, $db);
+	$pre_data = $pre_data[0];
+	$reserve_id = $pre_data['reserve_id'];
+	if(!$reserve_id){
+		HTTP::redirect("error.php");
+	}
+
+	$sql = "select * from a_pre_rv where pre_id = '$pre_id' order by weight desc";
+	$reserve_vl = db_get_all($sql, $db);
+
+	// 予約データ
+	$sql = "select * from a_reserve_list where reserve_id = '$reserve_id'";
+	$reserve_data = db_get_all($sql, $db);
+	$reserve_data = $reserve_data[0];
+
+	$hall_id = $reserve_data['hall_id'];
+	$room_id = $reserve_data['room_id'];
+
+	$sql = "select * from a_hall where hall_id = $hall_id";
+	$hall_data = db_get_all($sql, $db);
+	$hall_data = $hall_data[0];
+
+	$sql = "select * from a_room where hall_id = $hall_id and room_id = $room_id";
+	$room_data = db_get_all($sql, $db);
+	$room_data = $room_data[0];
+
+if($reserve_vl){
+	foreach($reserve_vl as $key=>$value){
+		$sql = "select * from a_vessel_data where vessel_id = ".$value['vessel_id'];
+		$result = db_get_all($sql, $db);
+		$name = $result[0]['vessel_name'];
+		$reserve_vl[$key]['name'] = $name;
+
+	}
+}
+
+?>
+
+<head>
+<script type="text/javascript" src="./atoffice/js/prototype.js"></script>
+<script type="text/javascript" src="./atoffice/js/smartRollover.js"></script>
+<script type="text/javascript" src="./atoffice/js/scriptaculous.js?load=effects,builder"></script>
+<script type="text/javascript" src="./atoffice/js/highslide.js"></script>
+<script type="text/javascript">
+  hs.graphicsDir = 'http://www.at-office.co.jp/highslide/graphics/';
+  hs.outlineType = 'rounded-white';
+  window.onload = function() {
+  hs.preloadImages(5);
+      }
+</script>
+<link href="./atoffice/css/style.css" rel="stylesheet" type="text/css" />
+
+</head>
+<body>
+
+<h2><b><?php print "備品変更確認 (".$hall_data['hall_name'].")"; ?></b></h2>
+<br>
+
+<table width=600>
+<tr>
+<td bgcolor=#CDCDCD style='border: 1px #000000 solid;text-align: center;'>会場名</td>
+<td style='border: 1px #000000 solid;text-align: center;'><?php print $hall_data['hall_name']; ?></td>
+<td bgcolor=#CDCDCD style='border: 1px #000000 solid;text-align: center;'>部屋名</td>
+<td style='border: 1px #000000 solid;text-align: center;'><?php print $room_data['room_name']; ?></td>
+</tr>
+
+<tr>
+<td bgcolor=#CDCDCD style='border: 1px #000000 solid;text-align: center;'>旧備品利用料金</td>
+<td style='border: 1px #000000 solid;text-align: center;'><?php print number_format($reserve_data['vessel_price']); ?> 円</td>
+<td bgcolor=#CDCDCD style='border: 1px #000000 solid;text-align: center;'>旧請求金額</td>
+<td style='border: 1px #000000 solid;text-align: center;'><?php print number_format($reserve_data['total_price']); ?> 円</td>
+</tr>
+
+</table>
+<br>
+<center>↓　↓　↓<br></center>
+<br>
+
+<form name='change_vessel' method='POST' action='./'>
+<input type='hidden' name='page' value='do_change_vessel' />
+<input type='hidden' name='pre_id' value='<?php print $pre_id; ?>' />
+
+<table width=600>
+<tr>
+<td bgcolor=#CDCDCD width=120 style='border: 1px #000000 solid;text-align: center;'>新備品利用料金</td>
+<td style='border: 1px #000000 solid;text-align: center;'><?php print number_format($pre_data['vessel_price']); ?> 円</td>
+<td bgcolor=#FFCCCC style='border: 1px #000000 solid;text-align: center;'>新請求金額</td>
+<td style='border: 1px #000000 solid;text-align: center;'>
+<span style="font-size:16px;color:#FF0000;"><b>
+<?php print number_format($pre_data['total_price']); ?>
+</b></span>
+ 円(税込)</td>
+</tr>
+<tr>
+<td bgcolor=#CDCDCD style='border: 1px #000000 solid;text-align: center;vertical-align:middle;'>新備品予約内訳</td>
+<td colspan=3 style='border: 1px #000000 solid;text-align: left;'>
+
+<?php
+if($reserve_vl){
+	foreach($reserve_vl as $value){
+		$code.= $value['name']." / ".number_format($value['price'])."円 x ".$value['num']."個<br>";
+	}
+}else{
+print "備品なし";
+}
+print $code;
+?>
+</td>
+</tr>
+
+
+<tr>
+<td colspan=4 style='border: 1px #000000 solid;text-align: center;'>
+<INPUT TYPE=button VALUE="　戻る　" style="width:250px;font:20px;border:3px ridge;background:#090;color:#fff; padding:3px; font-weight:bold;cursor: pointer;" onClick="self.history.back()">
+<INPUT TYPE="submit" VALUE="　確定　" style="width:250px;font:20px;border:3px ridge;background:#090;color:#fff; padding:3px; font-weight:bold;cursor: pointer;">
+</td>
+</tr>
+
+</table>
+</form>
+
+</div>
+<br>
+</body>
+

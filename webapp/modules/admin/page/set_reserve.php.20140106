@@ -1,0 +1,956 @@
+<?php
+//var_dump($_REQUEST);
+/**
+ * @copyright 2005-2008 OpenPNE Project
+ * @license   http://www.php.net/license/3_01.txt PHP License 3.01
+ */
+
+// 画像リスト
+class admin_page_set_reserve extends OpenPNE_Action
+{
+
+    function execute($requests)
+    {
+
+	// 有効期限切れを削除
+	$sql = "delete from a_rental_stop where limit_datetime < now() and flag = 0";
+	db_get_all($sql);
+
+	// アクセス権限
+	$sql = "select name, atoffice_auth_type, hall_id from c_admin_user where username = '".$_SESSION['_authsession']['username']."'";
+	$result = db_get_all($sql);
+	$this->set('name', $result[0]['name']);
+	$this->set('atoffice_auth_type', $result[0]['atoffice_auth_type']);
+
+	$hall_id = $result[0]['hall_id'];
+
+	// 日付
+	if(!is_null($_REQUEST['year']) and !is_null($_REQUEST['month']) and !is_null($_REQUEST['day'])){
+		$year = $_REQUEST['year'];
+		$month = $_REQUEST['month'];
+		$day = $_REQUEST['day'];
+
+if($day<=0){
+	$month--;
+	if($month<=0){
+		$year--;
+		$month=12;
+	}
+	for($x = 28; checkdate($month, $x, $year); $x++ ){
+		$day = $x;
+	}
+}elseif(!checkdate($month, $day, $year)){
+	$day=1;
+	$month++;
+	if(!checkdate($month, $day, $year)){
+		$year++;
+		$month=1;
+	}
+}
+
+	}else{
+		$year = date("Y");
+		$month = date("m");
+		$day = date("d");
+	}
+
+    $this->set('week', get_week($year.sprintf("%02d", $month).sprintf("%02d", $day)));
+
+	$this->set('this_year', date("Y"));
+	$month_list = array();
+	for($x=1;$x<=12;$x++){
+		array_push($month_list, $x);
+	}
+	$this->set('month_list', $month_list);
+	$day_list = array();
+	$week_list = array();
+	for($x=1;$x<=31;$x++){
+		array_push($day_list, $x);
+		array_push($week_list, get_week($year.sprintf("%02d", $month).sprintf("%02d", $x)));
+	}
+	$this->set('day_list', $day_list);
+	$this->set('week_list', $week_list);
+
+	//var_dump($_REQUEST);
+
+	$sql = "select * from a_hall where flag=0";
+	$hall_list = db_get_all($sql);
+	if($_REQUEST['hall_list']){
+		$hall_id = $_REQUEST['hall_list'];
+	}else{
+		$hall_id = $hall_list[0]['hall_id'];
+	}
+	$this->set('hall_list', $hall_list);
+
+
+
+// 会場取得
+
+	$sql = "select * from a_hall where hall_id = $hall_id";
+	$hall_data = db_get_all($sql);
+	$hall_data = $hall_data[0];
+
+// 営業時間範囲
+	$open_time = array();
+	for($x=$hall_data['begin'];$x<$hall_data['finish'];$x++){
+		array_push($open_time, intval($x));
+	}
+	$col_num = 1;
+
+//----------------------------------------------
+$periodmode=isset($_REQUEST['periodmode'])?1:0;
+	$period=@$_REQUEST['period']; if(!$period) $period=31;
+	$this->set('period', $period);
+if(!$periodmode){
+
+// 会場で有効な部屋データ
+
+	$sql = "select * from a_room where hall_id = $hall_id and flag=1";
+	$room_data = db_get_all($sql, $db);
+	$room_data = $room_data;
+
+
+foreach($room_data as $k=>$v){
+
+if(!check_holiday($hall_id, $v['room_id'], $year, $month, $day)){
+	$room_data[$k]['holiday'] = 0;
+	$room_data[$k]['opentime'] = $open_time;
+	$room_data[$k]['max'] = max($v['num_school'], $v['num_mouth'], $v['num_theater']);
+
+if ($v['type']==2){
+		if($v['koma']>1){
+			$hosei = $v['koma']*$v['lowest_koma'];
+		}else{
+			$hosei = $v['lowest_koma'];
+		}
+		$koma = $v['koma'];
+		$min = array();
+		if($koma==0.5){
+			$room_data[$k]['cs'] = 2;
+			$key=0;
+			foreach($open_time as $value){
+				$min[$key]['time'] = sprintf("%02d", $value).':00';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value).':30';
+				$key++;
+				$min[$key]['time'] = sprintf("%02d", $value).':30';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value+1).':00';
+				$key++;
+			}
+			$room_data[$k]['opentime'] = $min;
+			if($col_num<2){
+				$col_num = 2;
+			}
+		}elseif($koma==0.25){
+			$room_data[$k]['cs'] = 1;
+			foreach($open_time as $value){
+				$min[$key]['time'] = sprintf("%02d", $value).':00';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value).':15';
+				$key++;
+				$min[$key]['time'] = sprintf("%02d", $value).':15';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value).':30';
+				$key++;
+				$min[$key]['time'] = sprintf("%02d", $value).':30';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value).':45';
+				$key++;
+				$min[$key]['time'] = sprintf("%02d", $value).':45';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value+1).':00';
+				$key++;
+			}
+			$room_data[$k]['opentime'] = $min;
+			if($col_num<3){
+				$col_num = 3;
+			}
+		}else{
+
+			$room_data[$k]['cs'] = 4*$v['koma'];
+			$count_koma = 0;
+			foreach($open_time as $value){
+				$count_koma--;
+				if($count_koma<=0){
+					if(($value+$v['koma']) <= $hall_data['finish']){
+						$min[$key]['time'] = sprintf("%02d", $value).':00';
+						$min[$key]['begin_time'] = $min[$key]['time'];
+						$min[$key]['finish_time'] = sprintf("%02d", $value+1).':00';
+						$key++;
+						$count_koma = $v['koma'];
+					}
+				}
+			}
+			$room_data[$k]['opentime'] = $min;
+			
+
+		}
+
+		// その日のデータを全て取得する。
+		$dayday=$year."-".$month."-".$day." ";
+		$daystart=$dayday."00:00:00";
+		$dayend=$dayday."23:59:59";
+			$sql = "select * from a_reserve_list where hall_id = $hall_id and room_id = ".$v['room_id']." and cancel_flag=0 and (begin_datetime >= '$daystart' and '$dayend' > finish_datetime)";
+			$today_reserve_flag = db_get_all($sql, $db);
+//		echo $sql;
+//		var_dump($today_reserve_flag);
+
+			// 重なる貸し止め
+			$sql = "select * from a_rental_stop where hall_id = $hall_id and room_id = ".$v['room_id']." and (begin_datetime >= '$daystart' and '$dayend' > finish_datetime) and (limit_datetime > now() or flag=1)";
+			$today_stop_flag = db_get_all($sql, $db);
+
+
+	foreach($room_data[$k]['opentime'] as $key=>$val){
+		$room_data[$k]['opentime'][$key]['reserved'] = 0;
+		$datetime = $year."-".$month."-".$day." ".$val['time'].":00";
+		$strdt=strtotime($datetime);
+
+/*
+		// 重なる予約
+		$sql = "select reserve_id from a_reserve_list where hall_id = $hall_id and room_id = ".$v['room_id']." and cancel_flag=0 and (begin_datetime <= '$datetime' and '$datetime' < finish_datetime)";
+		$reserve_flag = db_get_all($sql);
+		// 重なる貸し止め
+		$sql = "select * from a_rental_stop where hall_id = $hall_id and room_id = ".$v['room_id']." and (begin_datetime <= '$datetime' and '$datetime' < finish_datetime)";
+		$stop_flag = db_get_all($sql);
+*/
+
+		$reserve_flag=$stop_flag=0;
+		if(isset($today_reserve_flag)) foreach($today_reserve_flag as $kk=>$vv){
+			if(strtotime($vv['begin_datetime'])<=$strdt && strtotime($vv['finish_datetime'])>$strdt){ $reserve_flag=$vv['reserve_id']; break; }
+		}
+		if(isset($today_stop_flag)) foreach($today_stop_flag as $kk=>$vv){
+			if(strtotime($vv['begin_datetime'])<=$strdt && strtotime($vv['finish_datetime'])>$strdt){ $stop_flag=$vv; break; }
+		}
+
+		if($reserve_flag){
+			$room_data[$k]['opentime'][$key]['reserved'] = $reserve_flag;
+		}elseif($stop_flag){
+			if($stop_flag['flag']==1){	// rental_stopとの仕様合わせ:この3行
+				$stop_flag['limit_datetime']="無期限";
+			}
+			$room_data[$k]['opentime'][$key]['stoped'] = $stop_flag;
+		}
+	}
+
+
+}else{
+// 池袋
+// コマ割り
+	$room_data[$k]['komawari'] = array();
+
+		// その日のデータを全て取得する。
+		$dayday=$year."-".$month."-".$day." ";
+		$daystart=$dayday."00:00:00";
+		$dayend=$dayday."23:59:59";
+			$sql = "select * from a_reserve_list where hall_id = $hall_id and room_id = ".$v['room_id']." and cancel_flag=0 and (begin_datetime >= '$daystart' and '$dayend' > finish_datetime)";
+			$today_reserve_flag = db_get_all($sql, $db);
+
+			// 重なる貸し止め
+			$sql = "select * from a_rental_stop where hall_id = $hall_id and room_id = ".$v['room_id']." and (begin_datetime >= '$daystart' and '$dayend' > finish_datetime) and (limit_datetime > now() or flag=1)";
+			$today_stop_flag = db_get_all($sql, $db);
+//var_dump($today_stop_flag);
+
+			// 部屋データ取得
+
+			$sql="select * from a_room where hall_id=$hall_id and room_id=".$v['room_id'];
+			$roomstatus = db_get_all($sql, $db);
+
+	foreach($room_data[$k]['opentime'] as $open_k=>$open_v){
+
+		$datetime = $year."-".$month."-".$day." ".$open_v.":00:00";
+		$strdt=strtotime($datetime);
+/*
+		// 重なる予約
+		$sql = "select reserve_id from a_reserve_list where hall_id = $hall_id and room_id = ".$v['room_id']." and cancel_flag=0 and (begin_datetime <= '$datetime' and '$datetime' < finish_datetime)";
+		$reserve_flag = db_get_all($sql);
+		// 重なる貸し止め
+		$sql = "select * from a_rental_stop where hall_id = $hall_id and room_id = ".$v['room_id']." and (begin_datetime <= '$datetime' and '$datetime' < finish_datetime)";
+		$stop_flag = db_get_all($sql);
+*/
+		//print $sql."<br>";
+		for($x=1;$x<=23;$x++){
+			if(!is_null($v['begin_time'.$x]) and $open_v == $v['begin_time'.$x]){
+				$room_data[$k]['komawari'][$open_k]['cs']=($v['finish_time'.$x]-$v['begin_time'.$x])*4;
+				$room_data[$k]['komawari'][$open_k]['begin_time'] = sprintf("%02d", $v['begin_time'.$x]).":00";
+				$room_data[$k]['komawari'][$open_k]['finish_time'] = sprintf("%02d", $v['finish_time'.$x]).":00";
+
+				$room_data[$k]['komawari'][$open_k]['price'] = $v['price'.$x];
+				$room_data[$k]['komawari'][$open_k]['rest']=0;
+
+				$reserve_flag=$stop_flag=0;
+				if(isset($today_reserve_flag)) foreach($today_reserve_flag as $kk=>$vv){
+					if(strtotime($vv['begin_datetime'])<=$strdt && strtotime($vv['finish_datetime'])>$strdt){ $reserve_flag=$vv['reserve_id']; break; }
+				}
+				if(isset($today_stop_flag)) foreach($today_stop_flag as $kk=>$vv){
+					if(strtotime($vv['begin_datetime'])<=$strdt && strtotime($vv['finish_datetime'])>$strdt){ $stop_flag=$vv; break; }
+				}
+
+				if($reserve_flag){
+					$room_data[$k]['komawari'][$open_k]['reserved'] = $reserve_flag;
+				}else if($stop_flag){
+					if($stop_flag['flag']==1){	// rental_stopとの仕様合わせ この3行
+						$stop_flag['limit_datetime']="無期限";
+					}
+//					$room_data[$k]['komawari'][$open_k]['reserved'] = 1;
+					$room_data[$k]['komawari'][$open_k]['stoped']=$stop_flag;
+				}
+/*
+				if($reserve_flag[0]['reserve_id']){
+                    $room_data[$k]['komawari'][$open_k]['reserved']=$reserve_flag[0]['reserve_id'];
+				}elseif($stop_flag[0]['stop_id']){
+					$room_data[$k]['komawari'][$open_k]['stoped']=$stop_flag[0];
+				}
+*/
+				break;
+			}else{
+/*
+				$sql="select count(*) as flag from a_room where hall_id=$hall_id and room_id=".$v['room_id']." and ((begin_time1 < $open_v and $open_v < finish_time1) or (begin_time2 < $open_v and $open_v < finish_time2) or (begin_time3 < $open_v and $open_v < finish_time3) or (begin_time4 < $open_v and $open_v < finish_time4) or (begin_time5 < $open_v and $open_v < finish_time5) or (begin_time6 < $open_v and $open_v < finish_time6) or (begin_time7 < $open_v and $open_v < finish_time7) or (begin_time8 < $open_v and $open_v < finish_time8) or (begin_time9 < $open_v and $open_v < finish_time9) or (begin_time10 < $open_v and $open_v < finish_time10) or (begin_time11 < $open_v and $open_v < finish_time11) or (begin_time12 < $open_v and $open_v < finish_time12) or (begin_time13 < $open_v and $open_v < finish_time13) or (begin_time14 < $open_v and $open_v < finish_time14) or (begin_time15 < $open_v and $open_v < finish_time15) or (begin_time16 < $open_v and $open_v < finish_time16) or (begin_time17 < $open_v and $open_v < finish_time17) or (begin_time18 < $open_v and $open_v < finish_time18) or (begin_time19 < $open_v and $open_v < finish_time19) or (begin_time20 < $open_v and $open_v < finish_time20) or (begin_time21 < $open_v and $open_v < finish_time21) or (begin_time22 < $open_v and $open_v < finish_time22) or (begin_time23 < $open_v and $open_v < finish_time23))";
+				//print $sql."<br>";
+				$check = db_get_all($sql);
+				if(!$check[0]['flag']){
+*/
+				$f=0;
+				for($i=1;$i<=23;$i++){
+					if($roomstatus[0]['begin_time'.$i]<$open_v &&
+						$open_v<$roomstatus[0]['finish_time'.$i]){
+						$f=1;
+						break;
+					}
+				}
+				if(!$f){
+					$room_data[$k]['komawari'][$open_k]['cs']=4;
+					$room_data[$k]['komawari'][$open_k]['rest']=1;
+				}
+			}// if
+
+		}// for
+
+	}
+
+
+}// if type
+
+}else{ // holiday
+
+	$room_data[$k]['holiday'] = 1;
+
+}// holiday
+
+}// foreach
+
+////////////////予約のコマをくっつける
+
+foreach($room_data as $key=>$value){
+	$opentime2 = array();
+	$line=0;
+	if($value['type']==2){
+		$count = 0;
+		if($value['opentime']){
+			foreach($value['opentime'] as $k=>$v){
+				if($v['reserved']){
+					if($count==0){
+						$kk=$k;
+						while($v['reserved']==$value['opentime'][$kk]['reserved']){
+							//print $v['reserved']."==".$value['opentime'][$kk]['reserved']."<br>";
+							$count++;
+							if($count>20){
+								break;
+							}
+							$kk++;
+						}
+						//print $v['time']."<br>";
+						$opentime2[$line]=$v;
+						$opentime2[$line]['cs']=$value['cs']*$count;
+
+// 予約情報を入れる
+$sql = "select * from a_reserve_list where reserve_id = ".$v['reserved'];
+$reserve_data = db_get_all($sql);
+$opentime2[$line]['reserve_data'] = $reserve_data[0];
+
+$sql = "select * from c_member where c_member_id = ".$reserve_data[0]['c_member_id'];
+$c_member = db_get_all($sql);
+$opentime2[$line]['c_member'] = $c_member[0];
+
+$opentime2[$line]['corp'] = get_profile_value($reserve_data[0]['c_member_id'], 12);
+
+//備品
+$sql = "select * from a_reserve_v where reserve_id = ".$v['reserved']." and cancel_flag = 0";
+$reserve_v_list = db_get_all($sql);
+if($reserve_v_list){
+	foreach($reserve_v_list as $loop_k=>$loop_v){
+		$vessel_data = get_vessel_data($loop_v['vessel_id']);
+		$reserve_v_list[$loop_k]['vessel_name'] = $vessel_data['vessel_name'];
+	}
+}else{
+	$reserve_v_list = 0;
+}
+$opentime2[$line]['reserve_v_list'] = $reserve_v_list;
+
+//サービス
+$sql = "select * from a_reserve_s where reserve_id = ".$v['reserve_id']." and cancel_flag = 0";
+$reserve_s_list = db_get_all($sql);
+if($reserve_s_list){
+	foreach($reserve_s_list as $loop_k=>$loop_v){
+		$service_data = get_service_data($loop_v['service_id']);
+		$reserve_s_list[$loop_k]['service_name'] = $service_data['service_name'];
+	}
+}else{
+	$reserve_s_list = 0;
+}
+$opentime2[$line]['reserve_s_list'] = $reserve_s_list;
+
+
+
+						$line++;
+					}
+				}else{
+					//print $v['time']."<br>";
+					$opentime2[$line]=$v;
+					$opentime2[$line]['cs']=$value['cs'];
+					$line++;
+				}
+				if($count){
+					$count--;
+				}
+
+			}
+		}
+		$room_data[$key]['opentime']=$opentime2;
+	}else{
+		// type=1
+		$count = 0;
+		if($value['komawari']){
+			$col = count($value['komawari']);
+			foreach($value['komawari'] as $k=>$v){
+				if($count==0){
+					$opentime2[$line]=$v;
+					$opentime2[$line]['cs']=$v['cs'];
+					$colspan=0;
+					if($v['reserved']){
+						foreach($value['komawari'] as $kk=>$vv){
+							if($v['reserved']==$vv['reserved']){
+
+/////////////////////////
+
+	//$colspan = 1;
+	$colspan = $kk;
+
+////////////////////////
+							}
+						}
+
+
+// 予約情報を入れる
+$sql = "select * from a_reserve_list where reserve_id = ".$v['reserved'];
+$reserve_data = db_get_all($sql);
+$opentime2[$line]['reserve_data'] = $reserve_data[0];
+
+$sql = "select * from c_member where c_member_id = ".$reserve_data[0]['c_member_id'];
+$c_member = db_get_all($sql);
+$opentime2[$line]['c_member'] = $c_member[0];
+
+$opentime2[$line]['corp'] = get_profile_value($reserve_data[0]['c_member_id'], 12);
+//備品
+
+$sql = "select * from a_reserve_v where reserve_id = ".$v['reserved']." and cancel_flag = 0";
+$reserve_v_list = db_get_all($sql);
+
+if($reserve_v_list){
+	foreach($reserve_v_list as $loop_k=>$loop_v){
+		$vessel_data = get_vessel_data($loop_v['vessel_id']);
+		$reserve_v_list[$loop_k]['vessel_name'] = $vessel_data['vessel_name'];
+	}
+}else{
+	$reserve_v_list = array();
+}
+
+$opentime2[$line]['reserve_v_list'] = $reserve_v_list;
+
+//サービス
+$sql = "select * from a_reserve_s where reserve_id = ".$v['reserve_id']." and cancel_flag = 0";
+$reserve_s_list = db_get_all($sql);
+if($reserve_s_list){
+	foreach($reserve_s_list as $loop_k=>$loop_v){
+		$service_data = get_service_data($loop_v['service_id']);
+		$reserve_s_list[$loop_k]['service_name'] = $service_data['service_name'];
+	}
+}else{
+	$reserve_s_list = 0;
+}
+$opentime2[$line]['reserve_s_list'] = $reserve_s_list;
+
+					}
+
+					if($colspan){
+						$count++;
+
+						foreach($value['komawari'] as $kk=>$vv){
+							if($k<$kk and $kk<=$colspan){
+
+								$opentime2[$line]['cs']+=$vv['cs'];
+
+								$count++;
+							}
+						}
+
+					}
+					$line++;
+				}
+
+				if($count){
+					$count--;
+				}
+				
+				
+			}
+		}
+		$room_data[$key]['komawari']=$opentime2;
+	}
+
+}
+
+
+
+
+	$this->set('open_time', $open_time);
+	$this->set('room_data', $room_data);
+	$this->set('hall_data', $hall_data);
+	$this->set('hall_id', $hall_id);
+	$this->set('year', $year);
+	$this->set('month', $month);
+	$this->set('day', $day);
+
+	$ct = count($open_time);
+	$this->set('ct', $ct);
+
+        return 'success';
+    }else{
+//------------------------------------------------------ period mode
+
+$room_id=$_REQUEST['room_id'];
+$this->set('periodmode', 1);
+
+// 会場で有効な部屋データ
+
+	$sql = "select * from a_room where hall_id = $hall_id and room_id = $room_id and flag=1";
+	$room_data = db_get_all($sql, $db);
+//	echo $sql."<br>";
+//	var_dump($room_data);
+	$room_data=$room_data[0];
+
+	$room_data['opentime'] = $open_time;
+	$room_data['max'] = max($room_data['num_school'], $room_data['num_mouth'], $room_data['num_theater']);
+
+	//互換用
+	$v=$room_data;
+	//echo $_REQUEST['hall_list']."<br>";
+	//echo $v['room_id']."<br>";
+	//echo $v['room_name']."<br>";
+	//echo $v['type']."<br>";
+
+	$key=0;
+
+	if ($v['type']==2){
+		if($v['koma']>1){
+			$hosei = $v['koma']*$v['lowest_koma'];
+		}else{
+			$hosei = $v['lowest_koma'];
+		}
+		$koma = $v['koma'];
+		$min = array();
+		if($koma==0.5){
+			$room_data['cs'] = 2;
+			$key=0;
+			foreach($open_time as $value){
+				$min[$key]['time'] = sprintf("%02d", $value).':00';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value).':30';
+				$key++;
+				$min[$key]['time'] = sprintf("%02d", $value).':30';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value+1).':00';
+				$key++;
+			}
+			$room_data['opentime'] = $min;
+			if($col_num<2){
+				$col_num = 2;
+			}
+		}elseif($koma==0.25){
+			$room_data['cs'] = 1;
+			foreach($open_time as $value){
+				$min[$key]['time'] = sprintf("%02d", $value).':00';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value).':15';
+				$key++;
+				$min[$key]['time'] = sprintf("%02d", $value).':15';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value).':30';
+				$key++;
+				$min[$key]['time'] = sprintf("%02d", $value).':30';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value).':45';
+				$key++;
+				$min[$key]['time'] = sprintf("%02d", $value).':45';
+				$min[$key]['begin_time'] = $min[$key]['time'];
+				$min[$key]['finish_time'] = sprintf("%02d", $value+1).':00';
+				$key++;
+			}
+			$room_data['opentime'] = $min;
+			if($col_num<3){
+				$col_num = 3;
+			}
+		}else{
+
+			$room_data['cs'] = 4*$v['koma'];
+			$count_koma = 0;
+			foreach($open_time as $value){
+				$count_koma--;
+				if($count_koma<=0){
+					if(($value+$v['koma']) <= $hall_data['finish']){
+						$min[$key]['time'] = sprintf("%02d", $value).':00';
+						$min[$key]['begin_time'] = $min[$key]['time'];
+						$min[$key]['finish_time'] = sprintf("%02d", $value+1).':00';
+						$key++;
+						$count_koma = $v['koma'];
+					}
+				}
+			}
+			$room_data['opentime'] = $min;
+			
+
+		}
+	}
+
+//	$this->set('periodroom',$room_data);
+
+	$dayday=$year."-".$month."-".$day." ";
+	$daystart=$dayday."00:00:00";
+	$utc=strtotime($daystart);
+	$this->set('year', $year);
+	$this->set('month', $month);
+	$this->set('day', $day);
+
+for($i=0;$i<$period;$i++,$utc+=86400){
+//	echo $i."<br>";
+	$year=date("Y",$utc);
+	$month=date("n",$utc);
+	$day=date("j",$utc);
+	$holiday=check_holiday($hall_id, $room_id, $year, $month, $day);
+	$period_data[$i]["year"]=$year;
+	$period_data[$i]["month"]=$month;
+	$period_data[$i]["day"]=$day;
+	$period_data[$i]["holiday"]=$holiday;
+    	$period_data[$i]["week"]=get_week($year.sprintf("%02d", $month).sprintf("%02d", $day));
+	$period_data[$i]['opentime'] = $room_data['opentime'];
+	$period_data[$i]['cs'] = $room_data['cs'];
+
+	if ($v['type']==2){
+		// 神田タイプ
+		// その日のデータを全て取得する。
+		$dayday=$year."-".$month."-".$day." ";
+		$daystart=$dayday."00:00:00";
+		$dayend=$dayday."23:59:59";
+			$sql = "select * from a_reserve_list where hall_id = $hall_id and room_id = ".$v['room_id']." and cancel_flag=0 and (begin_datetime >= '$daystart' and '$dayend' > finish_datetime)";
+			$today_reserve_flag = db_get_all($sql, $db);
+
+			// 重なる貸し止め
+			$sql = "select * from a_rental_stop where hall_id = $hall_id and room_id = ".$v['room_id']." and (begin_datetime >= '$daystart' and '$dayend' > finish_datetime) and (limit_datetime > now() or flag=1)";
+			$today_stop_flag = db_get_all($sql, $db);
+
+	foreach($period_data[$i]['opentime'] as $key=>$val){
+		//var_dump($period_data[$i]['opentime'][$key]);
+		//echo "$key<br>";
+		$period_data[$i]['opentime'][$key]['reserved'] = 0;
+		$datetime = $year."-".$month."-".$day." ".$val['time'].":00";
+		$strdt=strtotime($datetime);
+
+
+		$reserve_flag=$stop_flag=0;
+		if(isset($today_reserve_flag)) foreach($today_reserve_flag as $kk=>$vv){
+			if(strtotime($vv['begin_datetime'])<=$strdt && strtotime($vv['finish_datetime'])>$strdt){ $reserve_flag=$vv['reserve_id']; break; }
+		}
+		if(isset($today_stop_flag)) foreach($today_stop_flag as $kk=>$vv){
+			if(strtotime($vv['begin_datetime'])<=$strdt && strtotime($vv['finish_datetime'])>$strdt){ $stop_flag=$vv; break; }
+		}
+
+		if($reserve_flag){
+			$period_data[$i]['opentime'][$key]['reserved'] = $reserve_flag;
+		}elseif($stop_flag){
+			if($stop_flag['flag']==1){	// rental_stopとの仕様合わせ:この3行
+				$stop_flag['limit_datetime']="無期限";
+			}
+			$period_data[$i]['opentime'][$key]['stoped'] = $stop_flag;
+		}
+	}
+
+
+	}else{
+	// 池袋
+	// コマ割り
+
+		// その日のデータを全て取得する。
+		$dayday=$year."-".$month."-".$day." ";
+		$daystart=$dayday."00:00:00";
+		$dayend=$dayday."23:59:59";
+			$sql = "select * from a_reserve_list where hall_id = $hall_id and room_id = ".$v['room_id']." and cancel_flag=0 and (begin_datetime >= '$daystart' and '$dayend' > finish_datetime)";
+			$today_reserve_flag = db_get_all($sql, $db);
+
+			// 重なる貸し止め
+			$sql = "select * from a_rental_stop where hall_id = $hall_id and room_id = ".$v['room_id']." and (begin_datetime >= '$daystart' and '$dayend' > finish_datetime) and (limit_datetime > now() or flag=1)";
+			$today_stop_flag = db_get_all($sql, $db);
+
+			// 部屋データ取得
+
+			$sql="select * from a_room where hall_id=$hall_id and room_id=".$v['room_id'];
+			$roomstatus = db_get_all($sql, $db);
+
+	foreach($room_data['opentime'] as $open_k=>$open_v){
+
+		$datetime = $year."-".$month."-".$day." ".$open_v.":00:00";
+		$strdt=strtotime($datetime);
+
+		for($x=1;$x<=23;$x++){
+			if(!is_null($v['begin_time'.$x]) and $open_v == $v['begin_time'.$x]){
+				$period_data[$i]['komawari'][$open_k]['cs']=($v['finish_time'.$x]-$v['begin_time'.$x])*4;
+				$period_data[$i]['komawari'][$open_k]['begin_time'] = sprintf("%02d", $v['begin_time'.$x]).":00";
+				$period_data[$i]['komawari'][$open_k]['finish_time'] = sprintf("%02d", $v['finish_time'.$x]).":00";
+
+				$period_data[$i]['komawari'][$open_k]['price'] = $v['price'.$x];
+				$period_data[$i]['komawari'][$open_k]['rest']=0;
+
+				$reserve_flag=$stop_flag=0;
+				if(isset($today_reserve_flag)) foreach($today_reserve_flag as $kk=>$vv){
+					if(strtotime($vv['begin_datetime'])<=$strdt && strtotime($vv['finish_datetime'])>$strdt){ $reserve_flag=$vv['reserve_id']; break; }
+				}
+				if(isset($today_stop_flag)) foreach($today_stop_flag as $kk=>$vv){
+					if(strtotime($vv['begin_datetime'])<=$strdt && strtotime($vv['finish_datetime'])>$strdt){ $stop_flag=$vv; break; }
+				}
+
+				if($reserve_flag){
+					$period_data[$i]['komawari'][$open_k]['reserved'] = $reserve_flag;
+				}else if($stop_flag){
+					if($stop_flag['flag']==1){	// rental_stopとの仕様合わせ この3行
+						$stop_flag['limit_datetime']="無期限";
+					}
+					$period_data[$i]['komawari'][$open_k]['stoped']=$stop_flag;
+				}
+				break;
+			}else{
+				$f=0;
+				for($j=1;$j<=23;$j++){
+					if($roomstatus[0]['begin_time'.$j]<$open_v &&
+						$open_v<$roomstatus[0]['finish_time'.$j]){
+						$f=1;
+						break;
+					}
+				}
+				if(!$f){
+					$period_data[$i]['komawari'][$open_k]['cs']=4;
+					$period_data[$i]['komawari'][$open_k]['rest']=1;
+				}
+			}// if
+
+		}// for
+
+	}//foreach
+
+
+	}// if type
+
+}// for
+
+////////////////予約のコマをくっつける
+
+foreach($period_data as $key=>$value){
+	$opentime2 = array();
+	$line=0;
+	if($room_data['type']==2){
+		$count = 0;
+		if($value['opentime']){
+			foreach($value['opentime'] as $k=>$v){
+				if($v['reserved']){
+					if($count==0){
+						$kk=$k;
+						while($v['reserved']==$value['opentime'][$kk]['reserved']){
+							//print $v['reserved']."==".$value['opentime'][$kk]['reserved']."<br>";
+							$count++;
+							if($count>20){
+								break;
+							}
+							$kk++;
+						}
+						//print $v['time']."<br>";
+						$opentime2[$line]=$v;
+						$opentime2[$line]['cs']=$value['cs']*$count;
+
+// 予約情報を入れる
+$sql = "select * from a_reserve_list where reserve_id = ".$v['reserved'];
+$reserve_data = db_get_all($sql);
+$opentime2[$line]['reserve_data'] = $reserve_data[0];
+
+$sql = "select * from c_member where c_member_id = ".$reserve_data[0]['c_member_id'];
+$c_member = db_get_all($sql);
+$opentime2[$line]['c_member'] = $c_member[0];
+
+$opentime2[$line]['corp'] = get_profile_value($reserve_data[0]['c_member_id'], 12);
+
+//備品
+$sql = "select * from a_reserve_v where reserve_id = ".$v['reserved']." and cancel_flag = 0";
+$reserve_v_list = db_get_all($sql);
+if($reserve_v_list){
+	foreach($reserve_v_list as $loop_k=>$loop_v){
+		$vessel_data = get_vessel_data($loop_v['vessel_id']);
+		$reserve_v_list[$loop_k]['vessel_name'] = $vessel_data['vessel_name'];
+	}
+}else{
+	$reserve_v_list = 0;
+}
+$opentime2[$line]['reserve_v_list'] = $reserve_v_list;
+
+//サービス
+$sql = "select * from a_reserve_s where reserve_id = ".$v['reserve_id']." and cancel_flag = 0";
+$reserve_s_list = db_get_all($sql);
+if($reserve_s_list){
+	foreach($reserve_s_list as $loop_k=>$loop_v){
+		$service_data = get_service_data($loop_v['service_id']);
+		$reserve_s_list[$loop_k]['service_name'] = $service_data['service_name'];
+	}
+}else{
+	$reserve_s_list = 0;
+}
+$opentime2[$line]['reserve_s_list'] = $reserve_s_list;
+
+
+
+						$line++;
+					}
+				}else{
+					//print $v['time']."<br>";
+					$opentime2[$line]=$v;
+					$opentime2[$line]['cs']=$value['cs'];
+					$line++;
+				}
+				if($count){
+					$count--;
+				}
+
+			}
+		}
+		$period_data[$key]['opentime']=$opentime2;
+	}else{
+		// type=1
+		$count = 0;
+		if($value['komawari']){
+			$col = count($value['komawari']);
+			foreach($value['komawari'] as $k=>$v){
+				if($count==0){
+					$opentime2[$line]=$v;
+					$opentime2[$line]['cs']=$v['cs'];
+					$colspan=0;
+					if($v['reserved']){
+						foreach($value['komawari'] as $kk=>$vv){
+							if($v['reserved']==$vv['reserved']){
+
+/////////////////////////
+
+	//$colspan = 1;
+	$colspan = $kk;
+
+////////////////////////
+							}
+						}
+
+
+// 予約情報を入れる
+$sql = "select * from a_reserve_list where reserve_id = ".$v['reserved'];
+$reserve_data = db_get_all($sql);
+$opentime2[$line]['reserve_data'] = $reserve_data[0];
+
+$sql = "select * from c_member where c_member_id = ".$reserve_data[0]['c_member_id'];
+$c_member = db_get_all($sql);
+$opentime2[$line]['c_member'] = $c_member[0];
+
+$opentime2[$line]['corp'] = get_profile_value($reserve_data[0]['c_member_id'], 12);
+//備品
+
+$sql = "select * from a_reserve_v where reserve_id = ".$v['reserved']." and cancel_flag = 0";
+$reserve_v_list = db_get_all($sql);
+
+if($reserve_v_list){
+	foreach($reserve_v_list as $loop_k=>$loop_v){
+		$vessel_data = get_vessel_data($loop_v['vessel_id']);
+		$reserve_v_list[$loop_k]['vessel_name'] = $vessel_data['vessel_name'];
+	}
+}else{
+	$reserve_v_list = array();
+}
+
+$opentime2[$line]['reserve_v_list'] = $reserve_v_list;
+
+//サービス
+$sql = "select * from a_reserve_s where reserve_id = ".$v['reserve_id']." and cancel_flag = 0";
+$reserve_s_list = db_get_all($sql);
+if($reserve_s_list){
+	foreach($reserve_s_list as $loop_k=>$loop_v){
+		$service_data = get_service_data($loop_v['service_id']);
+		$reserve_s_list[$loop_k]['service_name'] = $service_data['service_name'];
+	}
+}else{
+	$reserve_s_list = 0;
+}
+$opentime2[$line]['reserve_s_list'] = $reserve_s_list;
+
+					}
+
+					if($colspan){
+						$count++;
+
+						foreach($value['komawari'] as $kk=>$vv){
+							if($k<$kk and $kk<=$colspan){
+
+								$opentime2[$line]['cs']+=$vv['cs'];
+
+								$count++;
+							}
+						}
+
+					}
+					$line++;
+				}
+
+				if($count){
+					$count--;
+				}
+				
+				
+			}
+		}
+		$period_data[$key]['komawari']=$opentime2;
+	}
+
+}	// foreach
+
+
+
+//	var_dump($period_data);
+	$this->set('open_time', $open_time);
+	$this->set('room_data', $room_data);
+	$this->set('period_data', $period_data);
+	$this->set('hall_data', $hall_data);
+	$this->set('hall_id', $hall_id);
+	$this->set('room_id', $room_id);
+
+	$ct = count($open_time);
+	$this->set('ct', $ct);
+
+        return 'success';
+
+	}//if periodmode
+}	// excute
+}	// class
+
+
+
+
+?>

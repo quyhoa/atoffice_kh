@@ -1,0 +1,32 @@
+<?php
+/**
+ * @copyright 2005-2008 OpenPNE Project
+ * @license   http://www.php.net/license/3_01.txt PHP License 3.01
+ */
+
+// プロフィール項目追加
+class admin_do_consumption_tax_rate extends OpenPNE_Action
+{
+
+    function execute($requests)
+    {
+	//var_dump($_POST);
+	//print "<br>";
+
+	if((preg_match("/^[0-9]+$/", $_POST['tax']) and preg_match("/^[0-9]+$/", $_POST['tax'])) and $_POST['tax'] >= 0 and $_POST['tax'] <= 100){
+
+		$sql = "update a_tax SET rate = ".$_POST['tax'];
+		db_get_all($sql);
+
+	}else{
+		admin_client_redirect("consumption_tax_rate", '0～100までの値を設定してください。');
+	}
+
+	admin_client_redirect("consumption_tax_rate", '消費税率を設定しました。');
+
+
+    }
+}
+
+
+?>
