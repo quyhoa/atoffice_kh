@@ -1,0 +1,3 @@
+ALTER TABLE `a_agency`
+ADD COLUMN `type`  tinyint NOT NULL DEFAULT 0 AFTER `info`,
+ADD COLUMN `hall_list`  varchar(1024) NOT NULL AFTER `type`;

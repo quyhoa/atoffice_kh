@@ -81,7 +81,7 @@ function setMsgTenmetu(cf, year1, month1, day1, week){
     }
 }
 
-function reserve_form(type, number, room_id, room_name, discount){
+function reserve_form(type, number, room_id, room_name, discount){alert();
 
 	if(document.getElementById("rid").value && document.getElementById("rid").value!=room_id){
 		alert('2部屋以上を同時にご予約の場合は、1部屋1日毎に「予約追加」を押して登録してから次のご予約をお申し込みください。\n\n複数予約は予約担当が代行もいたします。\n\n《03-5465-5506》までお電話ください。');

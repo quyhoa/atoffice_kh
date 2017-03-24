@@ -92,7 +92,7 @@
 			<input type="hidden" name="c_member_id" value="({$c_member.c_member_id})">
 			<div class="block_content_detail">
 				<div class="radio_left text_align_commom">
-					<input id="nai" type="radio" name="flag" ({if $agency_data.type == 0}) checked ({/if}) value="0" onclick="checkAmari('nai')">会場指定なし
+					<input id="nai" type="radio" name="flag" value="0" checked onclick="checkAmari('nai')">会場指定なし
 				</div>
 				<div class="radio_right text_align_commom">
 					値引き率：<input id="percentOld" type="text" name="percent" ({if $agency_data.percent != 0}) value="({$agency_data.percent})" ({/if}) size=10> ％引き
@@ -100,9 +100,9 @@
 			</div>
 			<div class="block_content_detail">
 				<div class="radio_left text_align_commom">
-					<input id="amari" type="radio" name="flag" ({if $agency_data.type == 1}) checked ({/if}) value="1" onclick="checkAmari('amari')">会場指定あり<br>
+					<input id="amari" type="radio" name="flag" value="1" onclick="checkAmari('amari')">会場指定あり<br>
 				</div>
-				<div id="display_block_id" class="radio_right text_align_commom ({if $agency_data.type == 0}) display_block ({/if})">
+				<div id="display_block_id" class="radio_right text_align_commom display_block">
 					({foreach from=$hall_list item=hall})
 						<table style="border: none;">
 							<tr class="block-hall-list">
@@ -209,10 +209,6 @@
 
 <script type="text/javascript">	
 	var flag = 0;
-	var nai = document.getElementById('nai').checked;
-	if(nai == false){
-		flag = 1;
-	}
 	function checkAmari(id)
 	{
 		var val = document.getElementById(id).value;
@@ -250,14 +246,15 @@
 
 			for (i = 0; i < arr.length; i++) {
 			    percent = document.getElementById('percent_'+arr[i]).value;
-			    if(document.getElementById('chx_discount_'+arr[i]).checked){
-			    	if(percent == '' || reg.test(percent) === 'false' || percent < 1 || percent > 100 || isNaN(percent) == true){
+			    if(document.getElementById('chx_discount_'+arr[i]).checked){				
+					if(percent == '' || reg.test(percent) === 'false' || percent < 1 || percent > 100){
 						flagErr = 0;
 					}				
 				}else{
 					document.getElementById('percent_'+arr[i]).value = '';
 				}
 			}
+
 			if(flagErr == 1){
 				document.getElementById("percentOld").value = '';
 				document.getElementById('btn_submit').type = 'submit';

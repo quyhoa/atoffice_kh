@@ -70,7 +70,7 @@
 <td>
 	<div class="block_content_detail">
 		<div class="radio_left text_align_commom">
-			<input id="nai" type="radio" name="flag" value="0" ({if $agencylist.type == 0}) checked ({/if}) onclick="checkAmari('nai')">会場指定なし
+			<input id="nai" type="radio" name="flag" value="0" checked onclick="checkAmari('nai')">会場指定なし
 		</div>
 		<div class="radio_right text_align_commom">
 			値引き率：<input id="percentOld" type="text" name="percent" ({if $agencylist.percent != 0}) value="({$agencylist.percent})" ({/if}) size=10> ％引き
@@ -79,9 +79,9 @@
 
 	<div class="block_content_detail">
 		<div class="radio_left text_align_commom">
-			<input id="amari" type="radio" name="flag" value="1" ({if $agencylist.type == 1}) checked ({/if}) onclick="checkAmari('amari')">会場指定あり<br>
+			<input id="amari" type="radio" name="flag" value="1" onclick="checkAmari('amari')">会場指定あり<br>
 		</div>
-		<div id="display_block_id" class="radio_right text_align_commom ({if $agencylist.type == 0}) display_block ({/if})">
+		<div id="display_block_id" class="radio_right text_align_commom display_block">
 			({foreach from=$hall_list item=hall})
 				<table>
 					<tr class="block-hall-list">
@@ -111,12 +111,7 @@
 </p>
 </form>
 <script type="text/javascript">	
-	
 	var flag = 0;
-	var nai = document.getElementById('nai').checked;
-	if(nai == false){
-		flag = 1;
-	}
 	function checkAmari(id)
 	{
 		var val = document.getElementById(id).value;
@@ -143,10 +138,11 @@
 	}
 	// checkHallList
 	function checkHallList(arr){
+		console.log(arr);
 		var reg = new RegExp('^\\d+$');
 		if(flag == 0){
 			percent = document.getElementById('percentOld').value;
-			if(percent == ''|| reg.test(percent) === 'false' || percent < 1 || percent > 100 ||  isNaN(percent) == true){
+			if(percent == 0 || percent == ''|| reg.test(percent) === 'false' || percent < 1 || percent > 100){
 				if(document.getElementById("actionMsgId") != null){
 					document.getElementById("actionMsgId").remove();
 				}
@@ -157,22 +153,20 @@
 				document.getElementById('btn_submit').type = 'submit';
 			}
 		}else{
-			// console.log(flag);
 			var flagErr = 1;
 			document.getElementById('btn_submit').type = 'button';
-			// check validate			
-			var reg = new RegExp('^\\d+$');
-
+			// check validatefor 
 			for (i = 0; i < arr.length; i++) {
 			    percent = document.getElementById('percent_'+arr[i]).value;
-			    if(document.getElementById('chx_discount_'+arr[i]).checked){
-			    	if(percent == '' || reg.test(percent) === 'false' || percent < 1 || percent > 100 || isNaN(percent) == true){
+			    if(document.getElementById('chx_discount_'+arr[i]).checked){				
+					if(percent == '' || reg.test(percent) === 'false' || percent < 1 || percent > 100){
 						flagErr = 0;
 					}				
 				}else{
 					document.getElementById('percent_'+arr[i]).value = '';
 				}
 			}
+
 			if(flagErr == 1){
 				document.getElementById("percentOld").value = '';
 				document.getElementById('btn_submit').type = 'submit';

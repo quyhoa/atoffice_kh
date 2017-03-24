@@ -430,6 +430,8 @@ $room_data = db_get_all($sql, $db);
 /// 2013.12.21 消費税改定対応 end
 
 $room_data = $room_data;
+echo "<pre>";
+var_dump($room_data);
 
 // 補正時間（神田）
 
@@ -615,7 +617,7 @@ foreach($room_data as $k=>$v){
 //		$room_data[$k]['agency'] = 1;
 //		$room_data[$k]['discount'] = $agency['percent'];
 			$room_data[$k]['agency'] = $agency['percent'];
-       $agency_flag = 1;
+       		$agency_flag = 1;
 		}	//else{
 
 		// 割引期間

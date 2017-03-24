@@ -1,7 +1,7 @@
-<?php /* Smarty version 2.6.18, created on 2017-03-15 07:46:25
+<?php /* Smarty version 2.6.18, created on 2017-03-23 11:53:08
          compiled from file:D:%5CA_project%5Catoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl */ ?>
 <?php require_once(SMARTY_CORE_DIR . 'core.load_plugins.php');
-smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 2, false),array('function', 't_img_url', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 25, false),array('modifier', 't_escape', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 5, false),array('modifier', 'date_format', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 38, false),array('modifier', 't_implode', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 51, false),array('modifier', 't_truncate', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 51, false),array('modifier', 'nl2br', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 51, false),array('modifier', 'escape', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 56, false),)), $this); ?>
+smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 2, false),array('function', 't_img_url', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 45, false),array('modifier', 't_escape', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 5, false),array('modifier', 'date_format', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 58, false),array('modifier', 't_implode', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 71, false),array('modifier', 't_truncate', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 71, false),array('modifier', 'nl2br', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 71, false),array('modifier', 'escape', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 76, false),)), $this); ?>
 <?php echo $this->_tpl_vars['inc_header']; ?>
 
 <?php echo smarty_function_ext_include(array('file' => "inc_subnavi_adminSiteMember.tpl"), $this);?>
@@ -15,22 +15,42 @@ smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include
 
 </div>
 
-<?php if ($this->_tpl_vars['msg']): ?><p class="actionMsg"><?php echo smarty_modifier_t_escape($this->_tpl_vars['msg']); ?>
+<?php if ($this->_tpl_vars['msg']): ?><p id="actionMsgId" class="actionMsg"><?php echo smarty_modifier_t_escape($this->_tpl_vars['msg']); ?>
 </p><?php endif; ?>
+<p  id="actionMsgs" ></p>
 <style type="text/css">
 	.radio_left{
-		width: 30%;
+		width: 15%;
 		float: left;
 	}
 	.radio_right{
-		width: 70%;
+		width: 82%;
 		float: left;
-		margin-left: 10px;
+	}
+	.block_content_detail{
+		width: 100%;
+		padding-left: 3%;
+		padding-bottom: 25px;
+	}
+	.text_align_commom{
+		text-align: left;
+	}
+	.content_checkbox{
+    	width: 371px;
+    	height: 19px;
+	}
+	.display_block{
+		display: none;
+	}
+	.block-hall-list{
+		width: 100%;
+	}
+	#display_block_id table td {
+		border: none !important;
 	}
 </style>
 <h2 id="ttl01">メンバー詳細</h2>
 <div class="contents">
-
 <p id="userImg"><?php if ($this->_tpl_vars['c_member']['image_filename_1']): ?><a href="<?php echo smarty_function_t_img_url(array('filename' => smarty_modifier_t_escape($this->_tpl_vars['c_member']['image_filename_1'])), $this);?>
 " target="_blank"><img src="<?php echo smarty_function_t_img_url(array('filename' => smarty_modifier_t_escape($this->_tpl_vars['c_member']['image_filename_1']),'w' => 120,'h' => 120), $this);?>
 "></a><?php endif; ?><?php if ($this->_tpl_vars['c_member']['image_filename_2']): ?><a href="<?php echo smarty_function_t_img_url(array('filename' => smarty_modifier_t_escape($this->_tpl_vars['c_member']['image_filename_2'])), $this);?>
@@ -95,7 +115,7 @@ smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include
 	<tr>
 		<th style="background-color:#6666FF;"><b>代理店値引きを設定する</b></th>
 		<td style='border: 1px #CDCDCD solid;text-align: center;'>
-			<form name="add_agency" method="POST" action="./">
+			<form name="add_agency" method="POST" action="./" id="add_agency_form">
 			<input type="hidden" name="m" value="<?php echo smarty_modifier_t_escape($this->_tpl_vars['module_name']); ?>
 " />
 			<input type="hidden" name="a" value="do_<?php echo smarty_modifier_t_escape($this->_tpl_vars['hash_tbl']->hash('add_agency','do')); ?>
@@ -105,19 +125,59 @@ smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include
 " />
 			<input type="hidden" name="c_member_id" value="<?php echo smarty_modifier_t_escape($this->_tpl_vars['c_member']['c_member_id']); ?>
 ">
-			
-			
-			<div class="radio_left">
-				<input type="radio" name="flag" value="0" checked>有効期限あり<br>
-				<input type="radio" name="flag" value="1">有効期限なし<br>
+			<div class="block_content_detail">
+				<div class="radio_left text_align_commom">
+					<input id="nai" type="radio" name="flag" <?php if ($this->_tpl_vars['agency_data']['type'] == 0): ?> checked <?php endif; ?> value="0" onclick="checkAmari('nai')">会場指定なし
+				</div>
+				<div class="radio_right text_align_commom">
+					値引き率：<input id="percentOld" type="text" name="percent" <?php if ($this->_tpl_vars['agency_data']['percent'] != 0): ?> value="<?php echo smarty_modifier_t_escape($this->_tpl_vars['agency_data']['percent']); ?>
+" <?php endif; ?> size=10> ％引き
+				</div>
 			</div>
-			<div class="radio_right">
-				値引き率：<input type="text" name="percent" value="<?php echo smarty_modifier_t_escape($this->_tpl_vars['agency_data']['percent']); ?>
-" size=10> ％引き　<br>
-				備考：<input type="text" name="info" value="<?php echo smarty_modifier_t_escape($this->_tpl_vars['agency_data']['info']); ?>
+			<div class="block_content_detail">
+				<div class="radio_left text_align_commom">
+					<input id="amari" type="radio" name="flag" <?php if ($this->_tpl_vars['agency_data']['type'] == 1): ?> checked <?php endif; ?> value="1" onclick="checkAmari('amari')">会場指定あり<br>
+				</div>
+				<div id="display_block_id" class="radio_right text_align_commom <?php if ($this->_tpl_vars['agency_data']['type'] == 0): ?> display_block <?php endif; ?>">
+					<?php $_from = $this->_tpl_vars['hall_list']; if (!is_array($_from) && !is_object($_from)) { settype($_from, 'array'); }if (count($_from)):
+    foreach ($_from as $this->_tpl_vars['hall']):
+?>
+						<table style="border: none;">
+							<tr class="block-hall-list">
+								<td class="content_checkbox">
+								<input type='checkbox' <?php if (( $this->_tpl_vars['hall']['flagChecked'] != null && $this->_tpl_vars['hall']['flagChecked'] )): ?> checked <?php endif; ?> name='percents_<?php echo smarty_modifier_t_escape($this->_tpl_vars['hall']['hall_id']); ?>
+' id="chx_discount_<?php echo smarty_modifier_t_escape($this->_tpl_vars['hall']['hall_id']); ?>
+" value="<?php echo smarty_modifier_t_escape($this->_tpl_vars['hall']['hall_id']); ?>
+" onclick="showDiscount('chx_discount_<?php echo smarty_modifier_t_escape($this->_tpl_vars['hall']['hall_id']); ?>
+','discount_<?php echo smarty_modifier_t_escape($this->_tpl_vars['hall']['hall_id']); ?>
+')"><?php echo smarty_modifier_t_escape($this->_tpl_vars['hall']['hall_name']); ?>
+
+								</td>
+								<td>
+								<p id="discount_<?php echo smarty_modifier_t_escape($this->_tpl_vars['hall']['hall_id']); ?>
+" <?php if ($this->_tpl_vars['hall']['flagChecked'] === null): ?> style="display: none" <?php endif; ?> >値引き率：<input id="percent_<?php echo smarty_modifier_t_escape($this->_tpl_vars['hall']['hall_id']); ?>
+" type="text" name="percent_<?php echo smarty_modifier_t_escape($this->_tpl_vars['hall']['hall_id']); ?>
+" value="<?php echo smarty_modifier_t_escape($this->_tpl_vars['hall']['pecentValue']); ?>
+" size=10> ％引き</p>
+								</td>
+							</tr>
+						</table>
+					<?php endforeach; endif; unset($_from); ?>
+				</div>
+			</div>
+
+			<div class="block_content_detail">
+				<div class="radio_left text_align_commom">
+					&nbsp;&nbsp;&nbsp;&nbsp;
+				</div>
+				<div class="radio_right text_align_commom">
+					備考：<input type="text" name="info" value="<?php echo smarty_modifier_t_escape($this->_tpl_vars['agency_data']['info']); ?>
 " size=40>
-			</div>
-			<input type="submit" value="代理店値引きに登録">
+				<input type="button" id="btn_submit" value="代理店値引きに登録" onClick="checkHallList(<?php echo smarty_modifier_t_escape($this->_tpl_vars['hallLists']); ?>
+)">
+					
+				</div>
+			</div>		
 			</form>
 		</td>
 	</tr>
@@ -217,5 +277,71 @@ smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include
 <p class="groupLing"><a href="?m=<?php echo smarty_modifier_t_escape($this->_tpl_vars['module_name']); ?>
 &amp;a=page_<?php echo smarty_modifier_t_escape($this->_tpl_vars['hash_tbl']->hash('list_c_member')); ?>
 " onClick="history.back(); return false;" onKeyPress="history.back(); return false;">メンバーリストに戻る</a></p>
+
+<script type="text/javascript">	
+	var flag = 0;
+	var nai = document.getElementById('nai').checked;
+	if(nai == false){
+		flag = 1;
+	}
+	function checkAmari(id)
+	{
+		var val = document.getElementById(id).value;
+		if(val == 1)
+		{
+			flag = 1;
+			//rremove class display_block
+			document.getElementById("display_block_id").style.display="block";			
+		}else{
+			flag = 0;
+			document.getElementById("display_block_id").style.display="none";
+		}
+	}
+
+	// show discount
+	function showDiscount(chx_id,dis_id)
+	{
+		var val = document.getElementById(chx_id).checked;
+		if(val === true)
+		{
+			document.getElementById(dis_id).style.display="block";
+		}else{
+			document.getElementById(dis_id).style.display="none";
+		}
+	}
+	// checkHallList
+	function checkHallList(arr){
+		if(flag == 0){
+			document.getElementById('btn_submit').type = 'submit';
+		}else{
+			var flagErr = 1;
+			document.getElementById('btn_submit').type = 'button';
+			// check validate			
+			var reg = new RegExp('^\\d+$');
+
+			for (i = 0; i < arr.length; i++) {
+			    percent = document.getElementById('percent_'+arr[i]).value;
+			    if(document.getElementById('chx_discount_'+arr[i]).checked){
+			    	if(percent == '' || reg.test(percent) === 'false' || percent < 1 || percent > 100 || isNaN(percent) == true){
+						flagErr = 0;
+					}				
+				}else{
+					document.getElementById('percent_'+arr[i]).value = '';
+				}
+			}
+			if(flagErr == 1){
+				document.getElementById("percentOld").value = '';
+				document.getElementById('btn_submit').type = 'submit';
+			}else{
+				if(document.getElementById("actionMsgId") != null){
+					document.getElementById("actionMsgId").remove();
+				}
+				document.getElementById('actionMsgs').className = " actionMsg";
+				document.getElementById('actionMsgs').innerHTML = '値引き率には1以上100以下の半角数字を入力してください。';
+				window.scrollTo(30, 50);
+			}
+		}
+	}
+</script>
 
 <?php echo $this->_tpl_vars['inc_footer']; ?>
