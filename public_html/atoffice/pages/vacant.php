@@ -559,14 +559,16 @@ foreach($room_data as $k=>$v)
 		$agency = $agency[0];
 		$room_data[$k]['agency'] = 0;
 
-		if($agency['percent'])
-        {
-//		$room_data[$k]['agency'] = 1;
-//		$room_data[$k]['discount'] = $agency['percent'];
-			$room_data[$k]['agency'] = $agency['percent'];
-            $agency_flag = 1;
-		}	//else{
-
+		if(!empty($agency)){
+			if($agency['type'] == 1){
+				$hallListId = !empty($agency['hall_list']) ? json_decode($agency['hall_list'],true) : null;
+				$room_data[$k]['agency'] = $hallListId[$hall_id];
+				$agency_flag = 1;
+			}elseif($agency['percent']){
+				$room_data[$k]['agency'] = $agency['percent'];	
+				$agency_flag = 1;
+			}
+		}
 		// 割引期間
 //	$room_data[$k]['agency'] = 0;
 		$room_data[$k]['discount'] = 0;
@@ -793,13 +795,17 @@ foreach($room_data as $k=>$v)
 		$agency = db_get_all($sql, $db);
 		$agency = $agency[0];
 		$room_data[$k]['agency'] = 0;
-
-		if($agency['percent']){
-//		$room_data[$k]['agency'] = 1;
-//		$room_data[$k]['discount'] = $agency['percent'];
-			$room_data[$k]['agency'] = $agency['percent'];
-  		$agency_flag = 1;
-		}	//else{
+		
+		if(!empty($agency)){
+			if($agency['type'] == 1){
+				$hallListId = !empty($agency['hall_list']) ? json_decode($agency['hall_list'],true) : null;
+				$room_data[$k]['agency'] = $hallListId[$hall_id];
+				$agency_flag = 1;
+			}elseif($agency['percent']){
+				$room_data[$k]['agency'] = $agency['percent'];	
+				$agency_flag = 1;
+			}
+		}
 
 	// 割引期間
 //	$room_data[$k]['agency'] = 0;

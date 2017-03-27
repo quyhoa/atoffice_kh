@@ -518,15 +518,20 @@ function get_virtual_number($u){
 	return(0);
 }
 
-function get_dairi_percent($c_member_id){
+function get_dairi_percent($c_member_id,$hall_id = null){
 	$sql = "select * from a_agency where c_member_id = $c_member_id";
 	$agency = db_get_all($sql);
 	$agency = $agency[0];
-	if($agency['percent']){
-		return($agency['percent']);
-	}else{
-		return(0);
+	$percent = 0;
+	if(!empty($agency)){
+		if($agency['type'] == 1){
+			$hallListId = !empty($agency['hall_list']) ? json_decode($agency['hall_list'],true) : null;
+			$percent = $hallListId[$hall_id];
+		}elseif($agency['percent']){
+			$percent = $agency['percent'];
+		}
 	}
+	return $percent;
 }
 
 function get_waribiki_percent($hall_id, $room_id, $reserve_date){

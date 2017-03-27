@@ -191,7 +191,7 @@ if($hall_id and !is_null($room_id)){
 
 		}elseif($page=='reserve' || $page=='customerdata'){
 				$_REQUEST['pre_id'] = isset($_REQUEST['pre_id']) ? $_REQUEST['pre_id'] : '';
-         		check_agency_price($_REQUEST['pre_id'], $u);
+         		check_agency_price($_REQUEST['pre_id'], $u, $hall_id);
 			$page="reserve"; $_REQUEST['page']=$page; 
 
 			$url = "?hid=$hall_id&rid=$room_id&u=$u";
@@ -217,7 +217,7 @@ if($hall_id and !is_null($room_id)){
 				$url.="&$key=".urlencode($value);
 			}
 		}elseif($page=='reserve_list'){
-			check_agency_price($_REQUEST['pre_id'], $u);
+			check_agency_price($_REQUEST['pre_id'], $u, $hall_id);
 			$php = "/reserve_list.php";
 			$url = "?a=1";
 			foreach($_REQUEST as $key=>$value){
@@ -225,14 +225,14 @@ if($hall_id and !is_null($room_id)){
 			}
 
 		}elseif($page=='reserve_service'){
-			check_agency_price($_REQUEST['pre_id'], $u);
+			check_agency_price($_REQUEST['pre_id'], $u, $hall_id);
 			$url = "?a=1";
 			foreach($_REQUEST as $key=>$value){
 				$url.="&$key=".urlencode($value);
 			}
 			$requests['login_params']=$url;
 		}elseif($page=='reserve_vessel'){
-			check_agency_price($_REQUEST['pre_id'], $u);
+			check_agency_price($_REQUEST['pre_id'], $u, $hall_id);
 			$url = "?a=1";
 			foreach($_REQUEST as $key=>$value){
 				$url.="&$key=".urlencode($value);
@@ -292,7 +292,7 @@ if($hall_id and !is_null($room_id)){
 			}
 			$this->set('Calendar2', 1);
 		}elseif($page=='reserve_confirm'){
-			check_agency_price($_REQUEST['pre_id'], $u);
+			check_agency_price($_REQUEST['pre_id'], $u, $hall_id);
 			$php = "/reserve_confirm.php";
 			$url = "?a=1";
 			foreach($_REQUEST as $key=>$value){
@@ -2035,23 +2035,35 @@ exit();
 }
 
 
-function check_agency_price($pre_id, $u){
-
+function check_agency_price($pre_id, $u, $hall_id = null){
     //仮データ取得
     $sql = "select * from a_pre_reserve where pre_id = '$pre_id' and agency_flag = '0'";
     $pre_data = db_get_all($sql);
-    if($pre_data){
+    if(!empty($pre_data)){
         $sql = "select * from a_agency where c_member_id = '$u'";
         $result = db_get_all($sql);
         $result = isset($result[0]) ? $result[0] : null;
-        if($result['percent']){
-            foreach($pre_data as $value){
-                $waribiki_price = round($value['room_price'] - ($value['room_price'] * $result['percent'] * 0.01));                $total_price = $waribiki_price + $value['vessel_price'] + $value['service_price'];
+        if(!empty($result)){
+        	$percent = 0;
+        	$flag = 0;
+        	if($agency['type'] == 1){
+				$hallListId = !empty($agency['hall_list']) ? json_decode($agency['hall_list'],true) : null;
+				$percent = $hallListId[$hall_id];
+				$flag = 1;
+			}elseif($agency['percent']){
+				$percent = $agency['percent'];
+				$flag = 1;
+			}
+			if($flag){
+				foreach($pre_data as $value){
+	                $waribiki_price = round($value['room_price'] - ($value['room_price'] * $result['percent'] * 0.01));
+	                $total_price = $waribiki_price + $value['vessel_price'] + $value['service_price'];
 
-                $sql = "update a_pre_reserve SET room_price = '$waribiki_price', total_price = '$total_price', agency_flag = '1' where pid = ".$value['pid'];
-                db_get_all($sql);
+	                $sql = "update a_pre_reserve SET room_price = '$waribiki_price', total_price = '$total_price', agency_flag = '1' where pid = ".$value['pid'];
+	                db_get_all($sql);
 
-            }
+	            }
+			}
         }
     }
 

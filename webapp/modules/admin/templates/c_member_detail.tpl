@@ -207,7 +207,7 @@
 
 <p class="groupLing"><a href="?m=({$module_name})&amp;a=page_({$hash_tbl->hash('list_c_member')})" onClick="history.back(); return false;" onKeyPress="history.back(); return false;">メンバーリストに戻る</a></p>
 
-<script type="text/javascript">	
+<script type="text/javascript">
 	var flag = 0;
 	var nai = document.getElementById('nai').checked;
 	if(nai == false){
@@ -240,6 +240,7 @@
 	}
 	// checkHallList
 	function checkHallList(arr){
+		var count = 0;
 		if(flag == 0){
 			document.getElementById('btn_submit').type = 'submit';
 		}else{
@@ -253,12 +254,14 @@
 			    if(document.getElementById('chx_discount_'+arr[i]).checked){
 			    	if(percent == '' || reg.test(percent) === 'false' || percent < 1 || percent > 100 || isNaN(percent) == true){
 						flagErr = 0;
-					}				
+					}
+					count++;				
 				}else{
 					document.getElementById('percent_'+arr[i]).value = '';
 				}
 			}
-			if(flagErr == 1){
+			console.log(count);
+			if(flagErr == 1 && count > 0){
 				document.getElementById("percentOld").value = '';
 				document.getElementById('btn_submit').type = 'submit';
 			}else{

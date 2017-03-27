@@ -54,8 +54,14 @@ class admin_page_slip_output extends OpenPNE_Action {
             $agencys = db_get_all($sql);
             $agency_list = Array();
             foreach ($agencys as $i)
-                $agency_list[$i['c_member_id']] = $i['percent'];
-
+            {
+                if($i['type'] == 1){
+                    $hallListId = !empty($i['hall_list']) ? json_decode($i['hall_list'],true) : null;
+                    $agency_list[$i['c_member_id']] = $hallListId[$_POST['hall_id']];
+                }else{
+                    $agency_list[$i['c_member_id']] = $i['percent'];
+                }
+            }
             $sql = "select * from a_hall where flag = 0 order by pulldown desc";
             $hall_list = db_get_all($sql);
 
@@ -220,8 +226,7 @@ class admin_page_slip_output extends OpenPNE_Action {
                 $reserve_data[$key]['earnings'] = ($value['room_price'] + $value['vessel_price']) - $reserve_data[$key]['total_aomop'];
                 $total_earnings += $reserve_data[$key]['earnings'];
             }// foreach reserve_data
-
-
+            
             $this->set('agency_list', $agency_list);
             $this->set('reserve_data', $reserve_data);
             $this->set('total_room_price', $total_room_price);

@@ -143,6 +143,7 @@
 	}
 	// checkHallList
 	function checkHallList(arr){
+		var count = 0;
 		var reg = new RegExp('^\\d+$');
 		if(flag == 0){
 			percent = document.getElementById('percentOld').value;
@@ -168,12 +169,13 @@
 			    if(document.getElementById('chx_discount_'+arr[i]).checked){
 			    	if(percent == '' || reg.test(percent) === 'false' || percent < 1 || percent > 100 || isNaN(percent) == true){
 						flagErr = 0;
-					}				
+					}
+					count++;			
 				}else{
 					document.getElementById('percent_'+arr[i]).value = '';
 				}
 			}
-			if(flagErr == 1){
+			if(flagErr == 1 && count > 0){
 				document.getElementById("percentOld").value = '';
 				document.getElementById('btn_submit').type = 'submit';
 			}else{

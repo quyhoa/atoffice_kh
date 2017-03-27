@@ -1,4 +1,4 @@
-<?php /* Smarty version 2.6.18, created on 2017-03-23 11:53:08
+<?php /* Smarty version 2.6.18, created on 2017-03-24 09:11:45
          compiled from file:D:%5CA_project%5Catoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl */ ?>
 <?php require_once(SMARTY_CORE_DIR . 'core.load_plugins.php');
 smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 2, false),array('function', 't_img_url', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 45, false),array('modifier', 't_escape', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 5, false),array('modifier', 'date_format', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 58, false),array('modifier', 't_implode', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 71, false),array('modifier', 't_truncate', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 71, false),array('modifier', 'nl2br', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 71, false),array('modifier', 'escape', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/c_member_detail.tpl', 76, false),)), $this); ?>
@@ -278,7 +278,7 @@ smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include
 &amp;a=page_<?php echo smarty_modifier_t_escape($this->_tpl_vars['hash_tbl']->hash('list_c_member')); ?>
 " onClick="history.back(); return false;" onKeyPress="history.back(); return false;">メンバーリストに戻る</a></p>
 
-<script type="text/javascript">	
+<script type="text/javascript">
 	var flag = 0;
 	var nai = document.getElementById('nai').checked;
 	if(nai == false){
@@ -311,6 +311,7 @@ smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include
 	}
 	// checkHallList
 	function checkHallList(arr){
+		var count = 0;
 		if(flag == 0){
 			document.getElementById('btn_submit').type = 'submit';
 		}else{
@@ -324,12 +325,14 @@ smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include
 			    if(document.getElementById('chx_discount_'+arr[i]).checked){
 			    	if(percent == '' || reg.test(percent) === 'false' || percent < 1 || percent > 100 || isNaN(percent) == true){
 						flagErr = 0;
-					}				
+					}
+					count++;				
 				}else{
 					document.getElementById('percent_'+arr[i]).value = '';
 				}
 			}
-			if(flagErr == 1){
+			console.log(count);
+			if(flagErr == 1 && count > 0){
 				document.getElementById("percentOld").value = '';
 				document.getElementById('btn_submit').type = 'submit';
 			}else{

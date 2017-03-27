@@ -419,9 +419,14 @@ if ($v['type']==2){
 	$agency = db_get_all($sql, $db);
 	$agency = $agency[0];
 
-	if($agency['percent']){
+	if(!empty($agency)){
 		$room_data[$k]['agency'] = 1;
-		$room_data[$k]['discount'] = $agency['percent'];
+		if($agency['type'] == 1){
+			$hallListId = !empty($agency['hall_list']) ? json_decode($agency['hall_list'],true) : null;
+			$room_data[$k]['discount'] = $hallListId[$hall_id];
+		}elseif($agency['percent']){
+			$room_data[$k]['discount'] = $agency['percent'];
+		}
 	}else{
 
 	// 割引期間
@@ -602,11 +607,15 @@ if ($v['type']==2){
 	$agency = db_get_all($sql, $db);
 	$agency = $agency[0];
 
-	if($agency['percent']){
+	if(!empty($agency)){
 		$room_data[$k]['agency'] = 1;
-		$room_data[$k]['discount'] = $agency['percent'];
+		if($agency['type'] == 1){
+			$hallListId = !empty($agency['hall_list']) ? json_decode($agency['hall_list'],true) : null;
+			$room_data[$k]['discount'] = $hallListId[$hall_id];
+		}elseif($agency['percent']){
+			$room_data[$k]['discount'] = $agency['percent'];
+		}
 	}else{
-
 
 	// 割引期間
 	$room_data[$k]['agency'] = 0;

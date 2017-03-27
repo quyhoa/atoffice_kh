@@ -380,7 +380,7 @@ else if($old_hall !="" && $old_hall !=$hall_id)
 
 		// 代理店割引
 		if($c_member_id){
-			$percent = get_dairi_percent($c_member_id);
+			$percent = get_dairi_percent($c_member_id,$hall_id);
 			if($percent){
 				$waribiki.= "代理店割引き".$percent."%引き ";
 				$room_price = round($room_price - ($room_price * ($percent * 0.01)));
@@ -431,7 +431,7 @@ else if($old_hall !="" && $old_hall !=$hall_id)
 
 			// 代理店割引
 			if($c_member_id){
-				$percent = get_dairi_percent($c_member_id);
+				$percent = get_dairi_percent($c_member_id,$hall_id);
 				if($percent){
 					$waribiki.= " + 代理店割引き".$percent."%引き ";
 
@@ -464,7 +464,7 @@ else if($old_hall !="" && $old_hall !=$hall_id)
 				}
 			}
 			if($c_member_id){
-				$percent = get_dairi_percent($c_member_id);
+				$percent = get_dairi_percent($c_member_id,$hall_id);
                 		if($percent){
 					$waribiki.= "代理店割引き".$percent."%引き ";
 

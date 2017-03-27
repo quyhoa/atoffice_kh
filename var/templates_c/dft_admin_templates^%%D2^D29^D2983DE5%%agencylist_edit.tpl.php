@@ -1,4 +1,4 @@
-<?php /* Smarty version 2.6.18, created on 2017-03-23 11:52:21
+<?php /* Smarty version 2.6.18, created on 2017-03-24 09:13:02
          compiled from file:D:%5CA_project%5Catoffice_kh/webapp/modules/admin/templates/agencylist_edit.tpl */ ?>
 <?php require_once(SMARTY_CORE_DIR . 'core.load_plugins.php');
 smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/agencylist_edit.tpl', 2, false),array('modifier', 't_escape', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/agencylist_edit.tpl', 5, false),)), $this); ?>
@@ -172,6 +172,7 @@ smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include
 	}
 	// checkHallList
 	function checkHallList(arr){
+		var count = 0;
 		var reg = new RegExp('^\\d+$');
 		if(flag == 0){
 			percent = document.getElementById('percentOld').value;
@@ -197,12 +198,13 @@ smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include
 			    if(document.getElementById('chx_discount_'+arr[i]).checked){
 			    	if(percent == '' || reg.test(percent) === 'false' || percent < 1 || percent > 100 || isNaN(percent) == true){
 						flagErr = 0;
-					}				
+					}
+					count++;			
 				}else{
 					document.getElementById('percent_'+arr[i]).value = '';
 				}
 			}
-			if(flagErr == 1){
+			if(flagErr == 1 && count > 0){
 				document.getElementById("percentOld").value = '';
 				document.getElementById('btn_submit').type = 'submit';
 			}else{
