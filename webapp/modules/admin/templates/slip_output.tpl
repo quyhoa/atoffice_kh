@@ -284,6 +284,8 @@
 ({*<th>備考</th>*})
 <th>AO収益</th>
 </tr>
+({assign var="total_vessel_aomops" value="0"})
+({assign var="total_room_aomops" value="0"})
 ({foreach from=$reserve_data item=item})
 ({if $item.pay_date })
 <tr>

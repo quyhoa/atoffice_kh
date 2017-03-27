@@ -2063,10 +2063,8 @@ function check_agency_price($pre_id, $u, $hall_id = null){
         	$flag = 0;
         	if($agency['type'] == 1){
 				$hallListId = !empty($agency['hall_list']) ? json_decode($agency['hall_list'],true) : null;
-				if(!empty($hallListId[$hall_id])){
-					$percent = $hallListId[$hall_id];
-					$flag = 1;
-				}				
+				$percent = $hallListId[$hall_id];
+				$flag = 1;
 			}elseif($agency['percent']){
 				$percent = $agency['percent'];
 				$flag = 1;

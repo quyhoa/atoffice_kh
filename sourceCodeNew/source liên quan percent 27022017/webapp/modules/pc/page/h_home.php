@@ -1,5 +1,15 @@
 <?php
 /**
+*@author: haipt
+*@date: 2017-03-13
+**/
+if(isset($_REQUEST['page']) && $_REQUEST['page'] =='reserve_confirm')
+{
+	$u_member = db_member_c_member_secure4c_member_id($_REQUEST['uid']);
+	$_REQUEST['u_email'] = $u_member['pc_address'];
+	
+}
+/**
  * @copyright 2005-2008 OpenPNE Project
  * @license   http://www.php.net/license/3_01.txt PHP License 3.01
  */
@@ -62,7 +72,12 @@ class pc_page_h_home extends OpenPNE_Action
         // メンバー情報
         $c_member = db_member_c_member_with_profile($u, 'private');
         $this->set('c_member', $c_member);
-
+		//2017-03-14
+		if(!empty($c_member) && !empty($c_member['c_member_id']))
+		{
+			$u_member = db_member_c_member_secure4c_member_id($c_member['c_member_id']);
+			$_REQUEST['u_email'] = $u_member['pc_address'];
+		}
 /*
         if (OPENPNE_USE_POINT_RANK) {
             // ポイント
@@ -2048,8 +2063,10 @@ function check_agency_price($pre_id, $u, $hall_id = null){
         	$flag = 0;
         	if($agency['type'] == 1){
 				$hallListId = !empty($agency['hall_list']) ? json_decode($agency['hall_list'],true) : null;
-				$percent = $hallListId[$hall_id];
-				$flag = 1;
+				if(!empty($hallListId[$hall_id])){
+					$percent = $hallListId[$hall_id];
+					$flag = 1;
+				}				
 			}elseif($agency['percent']){
 				$percent = $agency['percent'];
 				$flag = 1;

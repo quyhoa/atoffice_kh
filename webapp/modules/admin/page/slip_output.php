@@ -57,7 +57,9 @@ class admin_page_slip_output extends OpenPNE_Action {
             {
                 if($i['type'] == 1){
                     $hallListId = !empty($i['hall_list']) ? json_decode($i['hall_list'],true) : null;
-                    $agency_list[$i['c_member_id']] = $hallListId[$_POST['hall_id']];
+                    if(!empty($hallListId[$_POST['hall_id']])){
+                        $agency_list[$i['c_member_id']] = $hallListId[$_POST['hall_id']];
+                    }
                 }else{
                     $agency_list[$i['c_member_id']] = $i['percent'];
                 }

@@ -1,7 +1,7 @@
-<?php /* Smarty version 2.6.18, created on 2017-03-24 11:23:38
+<?php /* Smarty version 2.6.18, created on 2017-03-27 09:28:36
          compiled from file:D:%5CA_project%5Catoffice_kh/webapp/modules/admin/templates/slip_output.tpl */ ?>
 <?php require_once(SMARTY_CORE_DIR . 'core.load_plugins.php');
-smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 2, false),array('modifier', 't_escape', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 16, false),array('modifier', 'number_format', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 296, false),array('modifier', 'date_format', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 580, false),array('modifier', 't_url2cmd', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 1208, false),array('modifier', 't_cmd', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 1208, false),array('modifier', 't_decoration', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 1208, false),array('modifier', 'round', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 1447, false),array('modifier', 'nl2br', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 1581, false),)), $this); ?>
+smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 2, false),array('modifier', 't_escape', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 16, false),array('modifier', 'number_format', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 298, false),array('modifier', 'date_format', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 582, false),array('modifier', 't_url2cmd', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 1210, false),array('modifier', 't_cmd', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 1210, false),array('modifier', 't_decoration', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 1210, false),array('modifier', 'round', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 1449, false),array('modifier', 'nl2br', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/slip_output.tpl', 1583, false),)), $this); ?>
 <?php echo $this->_tpl_vars['inc_header']; ?>
 
 <?php echo smarty_function_ext_include(array('file' => "inc_subnavi_adminStatisticalInformation.tpl"), $this);?>
@@ -346,6 +346,8 @@ smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include
 <th>キャンセル</th>
 <th>AO収益</th>
 </tr>
+<?php $this->assign('total_vessel_aomops', '0'); ?>
+<?php $this->assign('total_room_aomops', '0'); ?>
 <?php $_from = $this->_tpl_vars['reserve_data']; if (!is_array($_from) && !is_object($_from)) { settype($_from, 'array'); }if (count($_from)):
     foreach ($_from as $this->_tpl_vars['item']):
 ?>

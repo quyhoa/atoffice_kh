@@ -1,4 +1,4 @@
-<?php /* Smarty version 2.6.18, created on 2017-03-27 05:00:01
+<?php /* Smarty version 2.6.18, created on 2017-03-27 06:05:43
          compiled from file:D:%5CA_project%5Catoffice_kh/webapp/modules/admin/templates/agencylist_edit.tpl */ ?>
 <?php require_once(SMARTY_CORE_DIR . 'core.load_plugins.php');
 smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/agencylist_edit.tpl', 2, false),array('modifier', 't_escape', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/agencylist_edit.tpl', 5, false),)), $this); ?>
@@ -72,7 +72,7 @@ smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include
 <input type="hidden" name="c_member_id" value="<?php echo smarty_modifier_t_escape($this->_tpl_vars['agencylist']['c_member_id']); ?>
 ">
 
-<table class="basicType2" style="width: 50%;">
+<table class="basicType2" style="width: 910px !important;">
 <tbody>
 <tr>
 <th class="th_min_width">氏名</th>
