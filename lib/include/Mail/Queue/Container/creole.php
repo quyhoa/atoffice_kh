@@ -1,22 +1,41 @@
 <?php
 /* vim: set expandtab tabstop=4 shiftwidth=4: */
-// +----------------------------------------------------------------------+
-// | PEAR :: Mail :: Queue :: CREOLE Container                            |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 1997-2007 The PHP Group                                |
-// +----------------------------------------------------------------------+
-// | This source file is subject to version 3.0 of the PHP license,       |
-// | that is bundled with this package in the file LICENSE, and is        |
-// | available at through the world-wide-web at                           |
-// | http://www.php.net/license/3_0.txt.                                  |
-// | If you did not receive a copy of the PHP license and are unable to   |
-// | obtain it through the world-wide-web, please send a note to          |
-// | license@php.net so we can mail you a copy immediately.               |
-// +----------------------------------------------------------------------+
-// | Author: Randy Syring <randy at rcs-comp dot com>                     |
-// +----------------------------------------------------------------------+
-//
-// $Id: creole.php,v 1.1 2007/01/31 14:49:27 quipo Exp $
+/**
+ * +----------------------------------------------------------------------+
+ * | PEAR :: Mail :: Queue :: CREOLE Container                            |
+ * +----------------------------------------------------------------------+
+ * | Copyright (c) 1997-2008 Randy Syring                                 |
+ * +----------------------------------------------------------------------+
+ * | All rights reserved.                                                 |
+ * |                                                                      |
+ * | Redistribution and use in source and binary forms, with or without   |
+ * | modification, are permitted provided that the following conditions   |
+ * | are met:                                                             |
+ * |                                                                      |
+ * | * Redistributions of source code must retain the above copyright     |
+ * |   notice, this list of conditions and the following disclaimer.      |
+ * | * Redistributions in binary form must reproduce the above copyright  |
+ * |   notice, this list of conditions and the following disclaimer in    |
+ * |   the documentation and/or other materials provided with the         |
+ * |   distribution.                                                      |
+ * | * The names of its contributors may be used to endorse or promote    |
+ * |   products derived from this software without specific prior written |
+ * |   permission.                                                        |
+ * |                                                                      |
+ * | THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS  |
+ * | "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT    |
+ * | LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS    |
+ * | FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE       |
+ * | COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,  |
+ * | INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, |
+ * | BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;     |
+ * | LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER     |
+ * | CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT   |
+ * | LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN    |
+ * | ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE      |
+ * | POSSIBILITY OF SUCH DAMAGE.                                          |
+ * +----------------------------------------------------------------------+
+ */
 
 /**
  * Storage driver for fetching mail queue data from a CREOLE database
@@ -24,15 +43,29 @@
  * This storage driver can use all databases which are supported
  * by the CREOLE abstraction layer.
  *
- * @author   Randy Syring <randy at rcs-comp dot com>
- * @package  Mail_Queue
- * @version  $Id: creole.php,v 1.1 2007/01/31 14:49:27 quipo Exp $
+ * PHP Version 5
+ *
+ * @category   Mail
+ * @package    Mail_Queue
+ * @author     Randy Syring <randy at rcs-comp dot com>
+ * @version    CVS: $Id: creole.php 303870 2010-09-29 16:25:34Z till $
+ * @license    http://www.opensource.org/licenses/bsd-license.php The BSD License
+ * @link       http://pear.php.net/package/Mail_Queue
+ * @deprecated
  */
 require_once 'creole/Creole.php';
 require_once 'Mail/Queue/Container.php';
 
 /**
  * Mail_Queue_Container_creole
+ *
+ * @category   Mail
+ * @package    Mail_Queue
+ * @author     Randy Syring <randy at rcs-comp dot com>
+ * @version    Release: @package_version@
+ * @license    http://www.opensource.org/licenses/bsd-license.php The BSD License
+ * @link       http://pear.php.net/package/Mail_Queue
+ * @deprecated
  */
 class Mail_Queue_Container_creole extends Mail_Queue_Container
 {
@@ -56,6 +89,14 @@ class Mail_Queue_Container_creole extends Mail_Queue_Container
     var $sequence = null;
 
     var $constructor_error = null;
+
+    // }}}
+    // {{{ __construct()
+
+    function __construct($options)
+    {
+        return $this->Mail_Queue_Container_creole($options);
+    }
 
     // }}}
     // {{{ Mail_Queue_Container_Creole()
@@ -122,6 +163,9 @@ class Mail_Queue_Container_creole extends Mail_Queue_Container
             $this->queue_data = array(); //reset buffer
             while ($res->next()) {
                 $row = $res->getRow();
+
+                $delete_after_send = (bool) $row['delete_after_send'];
+
                 $this->queue_data[$this->_last_item] = new Mail_Queue_Body(
                     $row['id'],
                     $row['create_time'],
@@ -133,7 +177,7 @@ class Mail_Queue_Container_creole extends Mail_Queue_Container
                     $this->_isSerialized($row['recipient']) ? unserialize($row['recipient']) : $row['recipient'],
                     unserialize($row['headers']),
                     unserialize($row['body']),
-                    $row['delete_after_send'],
+                    $delete_after_send,
                     $row['try_sent']
                 );
                 $this->_last_item++;
@@ -178,7 +222,8 @@ class Mail_Queue_Container_creole extends Mail_Queue_Container
                 .'?)';
         try {
             $idgen = $this->db->getIdGenerator();
-            $stmt = $this->db->prepareStatement($query);
+            $stmt  = $this->db->prepareStatement($query);
+
             $stmt->setTimestamp(1, time());
             $stmt->setTimestamp(2, $time_to_send);
             $stmt->setInt(3, $id_user);
@@ -213,7 +258,9 @@ class Mail_Queue_Container_creole extends Mail_Queue_Container
             return new Mail_Queue_Error('Expected: Mail_Queue_Body class',
                 __FILE__, __LINE__);
         }
+
         $count = $mail->_try();
+
         $sql = 'UPDATE '. $this->mail_table
                 .' SET try_sent = ?'
                 .' WHERE id = ?';
@@ -292,6 +339,8 @@ class Mail_Queue_Container_creole extends Mail_Queue_Container
                 'CREOLE::query failed - "'.$sql.'" - '.$e->getMessage());
         }
 
+        $delete_after_send = (bool) $row['delete_after_send'];
+
         return new Mail_Queue_Body(
             $row['id'],
             $row['create_time'],
@@ -303,7 +352,7 @@ class Mail_Queue_Container_creole extends Mail_Queue_Container
             $this->_isSerialized($row['recipient']) ? unserialize($row['recipient']) : $row['recipient'],
             unserialize($row['headers']),
             unserialize($row['body']),
-            $row['delete_after_send'],
+            $delete_after_send,
             $row['try_sent']
         );
     }

@@ -1,7 +1,7 @@
 <?php
 
-$OPENPNE_URL = "http://52.68.20.64/";
-$OPENPNE_ADMIN_URL = "http://52.68.20.64/?m=admin";
+$OPENPNE_URL = "http://ec2-52-68-20-64.ap-northeast-1.compute.amazonaws.com/";
+$OPENPNE_ADMIN_URL = "http://ec2-52-68-20-64.ap-northeast-1.compute.amazonaws.com/?m=admin";
 
 // $mysql_addr = "127.0.0.1";
 // $port = 3306;

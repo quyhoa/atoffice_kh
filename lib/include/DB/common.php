@@ -5,7 +5,7 @@
 /**
  * Contains the DB_common base class
  *
- * PHP versions 4 and 5
+ * PHP version 5
  *
  * LICENSE: This source file is subject to version 3.0 of the PHP license
  * that is available through the world-wide-web at the following URI:
@@ -20,7 +20,7 @@
  * @author     Daniel Convissor <danielc@php.net>
  * @copyright  1997-2007 The PHP Group
  * @license    http://www.php.net/license/3_0.txt  PHP License 3.0
- * @version    CVS: $Id: common.php,v 1.143 2007/09/21 13:40:41 aharvey Exp $
+ * @version    CVS: $Id$
  * @link       http://pear.php.net/package/DB
  */
 
@@ -42,7 +42,7 @@ require_once 'PEAR.php';
  * @author     Daniel Convissor <danielc@php.net>
  * @copyright  1997-2007 The PHP Group
  * @license    http://www.php.net/license/3_0.txt  PHP License 3.0
- * @version    Release: 1.7.13
+ * @version    Release: 1.9.2
  * @link       http://pear.php.net/package/DB
  */
 class DB_common extends PEAR
@@ -145,7 +145,7 @@ class DB_common extends PEAR
      *
      * @return void
      */
-    function DB_common()
+    function __construct()
     {
         $this->PEAR('DB_Error');
     }
@@ -204,7 +204,7 @@ class DB_common extends PEAR
     function __wakeup()
     {
         if ($this->was_connected) {
-            $this->connect($this->dsn, $this->options);
+            $this->connect($this->dsn, $this->options['persistent']);
         }
     }
 
@@ -261,7 +261,7 @@ class DB_common extends PEAR
      */
     function quoteString($string)
     {
-        $string = $this->quote($string);
+        $string = $this->quoteSmart($string);
         if ($string{0} == "'") {
             return substr($string, 1, -1);
         }
@@ -284,8 +284,7 @@ class DB_common extends PEAR
      */
     function quote($string = null)
     {
-        return ($string === null) ? 'NULL'
-                                  : "'" . str_replace("'", "''", $string) . "'";
+        return $this->quoteSmart($string);
     }
 
     // }}}
@@ -1203,7 +1202,6 @@ class DB_common extends PEAR
      */
     function &query($query, $params = array())
     {
-        $db = new DB();
         if (sizeof($params) > 0) {
             $sth = $this->prepare($query);
             if (DB::isError($sth)) {
@@ -1215,7 +1213,7 @@ class DB_common extends PEAR
         } else {
             $this->last_parameters = array();
             $result = $this->simpleQuery($query);
-            if ($result === DB_OK || $db->isError($result)) {
+            if ($result === DB_OK || DB::isError($result)) {
                 return $result;
             } else {
                 $tmp = new DB_result($this, $result);
@@ -1250,7 +1248,7 @@ class DB_common extends PEAR
             return $query;
         }
         $result = $this->query($query, $params);
-        if (is_a($result, 'DB_result')) {
+        if (is_object($result) && is_a($result, 'DB_result')) {
             $result->setOption('limit_from', $from);
             $result->setOption('limit_count', $count);
         }
@@ -1278,11 +1276,10 @@ class DB_common extends PEAR
     function &getOne($query, $params = array())
     {
         $params = (array)$params;
-        $db = new DB();
         // modifyLimitQuery() would be nice here, but it causes BC issues
         if (sizeof($params) > 0) {
             $sth = $this->prepare($query);
-            if ($db->isError($sth)) {
+            if (DB::isError($sth)) {
                 return $sth;
             }
             $res = $this->execute($sth, $params);
@@ -1291,7 +1288,7 @@ class DB_common extends PEAR
             $res = $this->query($query);
         }
 
-        if ($db->isError($res)) {
+        if (DB::isError($res)) {
             return $res;
         }
 
@@ -1635,7 +1632,6 @@ class DB_common extends PEAR
     function &getAll($query, $params = array(),
                      $fetchmode = DB_FETCHMODE_DEFAULT)
     {
-        $db = new DB();
         // compat check, the params and fetchmode parameters used to
         // have the opposite order
         if (!is_array($params)) {
@@ -1665,8 +1661,8 @@ class DB_common extends PEAR
         } else {
             $res = $this->query($query);
         }
-        $db = new DB();
-        if ($res === DB_OK || $db->isError($res)) {
+
+        if ($res === DB_OK || DB::isError($res)) {
             return $res;
         }
 
@@ -1683,7 +1679,7 @@ class DB_common extends PEAR
 
         $res->free();
 
-        if ($db->isError($row)) {
+        if (DB::isError($row)) {
             $tmp = $this->raiseError($row);
             return $tmp;
         }
@@ -1871,13 +1867,18 @@ class DB_common extends PEAR
      *                 query and native error code.
      * @param mixed   native error code, integer or string depending the
      *                 backend
+     * @param mixed   dummy parameter for E_STRICT compatibility with
+     *                 PEAR::raiseError
+     * @param mixed   dummy parameter for E_STRICT compatibility with
+     *                 PEAR::raiseError
      *
      * @return object  the PEAR_Error object
      *
      * @see PEAR_Error
      */
     function &raiseError($code = DB_ERROR, $mode = null, $options = null,
-                         $userinfo = null, $nativecode = null)
+                         $userinfo = null, $nativecode = null, $dummy1 = null,
+                         $dummy2 = null)
     {
         // The error is yet a DB error object
         if (is_object($code)) {
@@ -2195,8 +2196,7 @@ class DB_common extends PEAR
      */
     function _checkManip($query)
     {
-        $db = new  DB();
-        if ($this->_next_query_manip || $db->isManip($query)) {
+        if ($this->_next_query_manip || DB::isManip($query)) {
             $this->_last_query_manip = true;
         } else {
             $this->_last_query_manip = false;

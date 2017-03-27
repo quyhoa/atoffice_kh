@@ -1,4 +1,4 @@
-<?php /* Smarty version 2.6.18, created on 2017-02-20 03:24:58
+<?php /* Smarty version 2.6.18, created on 2017-03-02 09:07:50
          compiled from file:/var/www/html/atoffice/webapp/modules/pc/templates/o_tologin.tpl */ ?>
 <?php require_once(SMARTY_CORE_DIR . 'core.load_plugins.php');
 smarty_core_load_plugins(array('plugins' => array(array('function', 't_img_url_skin', 'file:/var/www/html/atoffice/webapp/modules/pc/templates/o_tologin.tpl', 49, false),array('modifier', 't_escape', 'file:/var/www/html/atoffice/webapp/modules/pc/templates/o_tologin.tpl', 51, false),)), $this); ?>

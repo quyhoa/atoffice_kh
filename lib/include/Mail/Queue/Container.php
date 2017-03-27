@@ -1,28 +1,54 @@
 <?php
 /* vim: set expandtab tabstop=4 shiftwidth=4: */
-// +----------------------------------------------------------------------+
-// | PEAR :: Mail :: Queue :: Container                                   |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 1997-2004 The PHP Group                                |
-// +----------------------------------------------------------------------+
-// | This source file is subject to version 3.0 of the PHP license,       |
-// | that is bundled with this package in the file LICENSE, and is        |
-// | available at through the world-wide-web at                           |
-// | http://www.php.net/license/3_0.txt.                                  |
-// | If you did not receive a copy of the PHP license and are unable to   |
-// | obtain it through the world-wide-web, please send a note to          |
-// | license@php.net so we can mail you a copy immediately.               |
-// +----------------------------------------------------------------------+
-// | Authors: Radek Maciaszek <wodzu@tonet.pl>                            |
-// |          Lorenzo Alberton <l dot alberton at quipo dot it>           |
-// +----------------------------------------------------------------------+
-//
-// $Id: Container.php,v 1.10 2007/01/20 11:24:17 quipo Exp $
+/**
+ * +----------------------------------------------------------------------+
+ * | PEAR :: Mail :: Queue :: Container                                   |
+ * +----------------------------------------------------------------------+
+ * | Copyright (c) 1997-2004 The PHP Group                                |
+ * +----------------------------------------------------------------------+
+ * | All rights reserved.                                                 |
+ * |                                                                      |
+ * | Redistribution and use in source and binary forms, with or without   |
+ * | modification, are permitted provided that the following conditions   |
+ * | are met:                                                             |
+ * |                                                                      |
+ * | * Redistributions of source code must retain the above copyright     |
+ * |   notice, this list of conditions and the following disclaimer.      |
+ * | * Redistributions in binary form must reproduce the above copyright  |
+ * |   notice, this list of conditions and the following disclaimer in    |
+ * |   the documentation and/or other materials provided with the         |
+ * |   distribution.                                                      |
+ * | * The names of its contributors may be used to endorse or promote    |
+ * |   products derived from this software without specific prior written |
+ * |   permission.                                                        |
+ * |                                                                      |
+ * | THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS  |
+ * | "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT    |
+ * | LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS    |
+ * | FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE       |
+ * | COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,  |
+ * | INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, |
+ * | BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;     |
+ * | LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER     |
+ * | CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT   |
+ * | LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN    |
+ * | ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE      |
+ * | POSSIBILITY OF SUCH DAMAGE.                                          |
+ * +----------------------------------------------------------------------+
+ *
+ * PHP Version 4 and 5
+ *
+ * @category Mail
+ * @package  Mail_Queue
+ * @author   Radek Maciaszek <chief@php.net>
+ * @author   Lorenzo Alberton <l dot alberton at quipo dot it>
+ * @version  CVS: $Id: Container.php 303873 2010-09-29 16:46:47Z till $
+ * @license  http://www.opensource.org/licenses/bsd-license.php The BSD License
+ * @link     http://pear.php.net/package/Mail_Queue
+ */
 
 /**
- * File Container.php
- *
- * @package Mail_Queue
+ * Mail_Queue_Body
  */
 require_once 'Mail/Queue/Body.php';
 
@@ -30,12 +56,14 @@ require_once 'Mail/Queue/Body.php';
  * Mail_Queue_Container - base class for MTA queue.
  * Define methods for all storage containers.
  *
- * @version  $Revision: 1.10 $
+ * @abstract
+ * @category Mail
+ * @package  Mail_Queue
  * @author   Radek Maciaszek <chief@php.net>
  * @author   Lorenzo Alberton <l dot alberton at quipo dot it>
- * @package  Mail_Queue
- * @access   public
- * @abstract
+ * @license  http://www.opensource.org/licenses/bsd-license.php The BSD License
+ * @version  Release: @package_version@
+ * @link     http://pear.php.net/package/Mail_Queue
  */
 class Mail_Queue_Container
 {
@@ -95,6 +123,13 @@ class Mail_Queue_Container
         if (PEAR::isError($err = $this->preload())) {
             return $err;
         }
+        if ($err !== true) {
+            // limit met
+            return new Mail_Queue_Error(MAILQUEUE_ERROR_CANNOT_INITIALIZE,
+                $this->pearErrorMode, E_USER_ERROR, __FILE__, __LINE__,
+                'Cannot preload items: limit');
+        }
+
         if (empty($this->queue_data)) {
             return false;
         }
@@ -228,6 +263,11 @@ class Mail_Queue_Container
         return false;
     }
 
+    function getQueueCount()
+    {
+        return false;
+    }
+
     // }}}
     // {{{ deleteMail()
 
@@ -250,7 +290,9 @@ class Mail_Queue_Container
      * Preload mail to queue.
      * The buffer size can be set in the options.
      *
-     * @return mixed  True on success else Mail_Queue_Error object.
+     * @return mixed True on success, false when the limit is met, else
+     *               Mail_Queue_Error object.
+     *
      * @access private
      */
     function preload()
@@ -260,7 +302,7 @@ class Mail_Queue_Container
         }
 
         if (!$this->limit) {
-            return true;   //limit reached
+            return false; //limit reached
         }
 
         $bkp_limit = $this->limit;
@@ -285,7 +327,7 @@ class Mail_Queue_Container
 
         //set buffer pointers
         $this->_current_item = 0;
-        $this->_last_item = count($this->queue_data)-1;
+        $this->_last_item    = count($this->queue_data)-1;
 
         return true;
     }

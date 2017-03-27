@@ -342,9 +342,9 @@ if($date_error==0){
     $hour=$reserve_valid_data[0]['hour'];
     $minute=$reserve_valid_data[0]['minute'];
     
-    $yearBook= isset($_REQUEST["amp;year"]) ? $_REQUEST["amp;year"] : '';
-    $monthBook= isset($_REQUEST["amp;month"]) ? $_REQUEST["amp;month"] : '';
-    $dayBook= isset($_REQUEST["amp;day"]) ? $_REQUEST["amp;day"] : '';
+    $yearBook= $year;
+    $monthBook= $month;
+    $dayBook= $day;
     if($monthBook<10)
     {
         $monthBook='0'.intval($monthBook);

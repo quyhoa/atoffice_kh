@@ -1,4 +1,4 @@
-<?php /* Smarty version 2.6.18, created on 2017-03-24 09:13:02
+<?php /* Smarty version 2.6.18, created on 2017-03-27 05:00:01
          compiled from file:D:%5CA_project%5Catoffice_kh/webapp/modules/admin/templates/agencylist_edit.tpl */ ?>
 <?php require_once(SMARTY_CORE_DIR . 'core.load_plugins.php');
 smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/agencylist_edit.tpl', 2, false),array('modifier', 't_escape', 'file:D:\\A_project\\atoffice_kh/webapp/modules/admin/templates/agencylist_edit.tpl', 5, false),)), $this); ?>

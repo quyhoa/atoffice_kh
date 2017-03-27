@@ -1,4 +1,4 @@
-<?php /* Smarty version 2.6.18, created on 2017-02-20 02:58:53
+<?php /* Smarty version 2.6.18, created on 2017-03-02 19:23:31
          compiled from file:/var/www/html/atoffice/webapp/modules/admin/templates/today_reservation.tpl */ ?>
 <?php require_once(SMARTY_CORE_DIR . 'core.load_plugins.php');
 smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include', 'file:/var/www/html/atoffice/webapp/modules/admin/templates/today_reservation.tpl', 2, false),array('modifier', 't_escape', 'file:/var/www/html/atoffice/webapp/modules/admin/templates/today_reservation.tpl', 24, false),array('modifier', 'nl2br', 'file:/var/www/html/atoffice/webapp/modules/admin/templates/today_reservation.tpl', 149, false),array('modifier', 't_url2cmd', 'file:/var/www/html/atoffice/webapp/modules/admin/templates/today_reservation.tpl', 149, false),array('modifier', 't_cmd', 'file:/var/www/html/atoffice/webapp/modules/admin/templates/today_reservation.tpl', 149, false),array('modifier', 't_decoration', 'file:/var/www/html/atoffice/webapp/modules/admin/templates/today_reservation.tpl', 149, false),)), $this); ?>

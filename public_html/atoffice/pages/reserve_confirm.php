@@ -180,8 +180,15 @@ function get_week($date){
     $day = array("日", "月", "火", "水", "木", "金", "土");
     return $day[$res];
 }
-
-
+/**
+*@author: haipt
+*@date: 2017-03-13
+**/
+	$u_email = ''; 
+	if(isset($_REQUEST['amp;u_email']))
+	{
+		$u_email = $_REQUEST['amp;u_email'];
+	}
 ?>
 
 <head>
@@ -451,7 +458,8 @@ foreach($pre_data as $key=>$value){
 }// foreach
 ?>
 
-<form name="yoyaku" method="POST" action="./">
+<form name="yoyaku" method="POST" action="http://go.at-office.co.jp/l/73352/2017-02-28/79zrs8">
+<input type="hidden" name="email" value="<?php print $u_email;?>">
 <input type="hidden" name="page" value="do_yoyaku">
 <input type="hidden" name="pre_id" value="<?php print $pre_id; ?>">
 <input type="hidden" name="uid" value="<?php print $_REQUEST['amp;uid']; ?>">

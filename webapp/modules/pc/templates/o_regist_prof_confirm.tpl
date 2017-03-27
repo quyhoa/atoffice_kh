@@ -159,7 +159,7 @@ table#table-01 td {
 ({t_form_block m=pc a=do_o_regist_prof action=http://go.at-office.co.jp/l/73352/2017-02-28/79zrtx})
 <input type="hidden" name="mode" value="register" />
 <input type="hidden" name="sid" value="({$sid})" />
-<input type="hidden" name="email" value="phanthanhhai07t1@gmail.com" />
+<input type="hidden" name="email" value="({$pc_address})" />
 ({if $smarty.const.IS_SNS_ENTRY_CONFIRM })
 <input type="submit" class="input_submit" value="　参加申請　" />
 ({else})

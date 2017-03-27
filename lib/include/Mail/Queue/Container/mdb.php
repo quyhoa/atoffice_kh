@@ -1,22 +1,41 @@
 <?php
 /* vim: set expandtab tabstop=4 shiftwidth=4: */
-// +----------------------------------------------------------------------+
-// | PEAR :: Mail :: Queue :: MDB Container                               |
-// +----------------------------------------------------------------------+
-// | Copyright (c) 1997-2004 The PHP Group                                |
-// +----------------------------------------------------------------------+
-// | This source file is subject to version 3.0 of the PHP license,       |
-// | that is bundled with this package in the file LICENSE, and is        |
-// | available at through the world-wide-web at                           |
-// | http://www.php.net/license/3_0.txt.                                  |
-// | If you did not receive a copy of the PHP license and are unable to   |
-// | obtain it through the world-wide-web, please send a note to          |
-// | license@php.net so we can mail you a copy immediately.               |
-// +----------------------------------------------------------------------+
-// | Author: Lorenzo Alberton <l.alberton at quipo.it>                    |
-// +----------------------------------------------------------------------+
-//
-// $Id: mdb.php,v 1.19 2007/01/20 10:51:25 quipo Exp $
+/**
+ * +----------------------------------------------------------------------+
+ * | PEAR :: Mail :: Queue :: MDB Container                               |
+ * +----------------------------------------------------------------------+
+ * | Copyright (c) 1997-2004 The PHP Group                                |
+ * +----------------------------------------------------------------------+
+ * | All rights reserved.                                                 |
+ * |                                                                      |
+ * | Redistribution and use in source and binary forms, with or without   |
+ * | modification, are permitted provided that the following conditions   |
+ * | are met:                                                             |
+ * |                                                                      |
+ * | * Redistributions of source code must retain the above copyright     |
+ * |   notice, this list of conditions and the following disclaimer.      |
+ * | * Redistributions in binary form must reproduce the above copyright  |
+ * |   notice, this list of conditions and the following disclaimer in    |
+ * |   the documentation and/or other materials provided with the         |
+ * |   distribution.                                                      |
+ * | * The names of its contributors may be used to endorse or promote    |
+ * |   products derived from this software without specific prior written |
+ * |   permission.                                                        |
+ * |                                                                      |
+ * | THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS  |
+ * | "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT    |
+ * | LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS    |
+ * | FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE       |
+ * | COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,  |
+ * | INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, |
+ * | BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;     |
+ * | LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER     |
+ * | CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT   |
+ * | LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN    |
+ * | ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE      |
+ * | POSSIBILITY OF SUCH DAMAGE.                                          |
+ * +----------------------------------------------------------------------+
+ */
 
 /**
  * Storage driver for fetching mail queue data from a PEAR::MDB database
@@ -24,9 +43,15 @@
  * This storage driver can use all databases which are supported
  * by the PEAR MDB abstraction layer.
  *
- * @author   Lorenzo Alberton <l.alberton at quipo.it>
- * @version  $Id: mdb.php,v 1.19 2007/01/20 10:51:25 quipo Exp $
- * @package  Mail_Queue
+ * PHP Version 4 and 5
+ *
+ * @category   Mail
+ * @package    Mail_Queue
+ * @author     Lorenzo Alberton <l dot alberton at quipo dot it>
+ * @version    CVS: $Id: mdb.php 303870 2010-09-29 16:25:34Z till $
+ * @license    http://www.opensource.org/licenses/bsd-license.php The BSD License
+ * @link       http://pear.php.net/package/Mail_Queue
+ * @deprecated
  */
 require_once 'MDB.php';
 require_once 'Mail/Queue/Container.php';
@@ -126,6 +151,16 @@ require_once 'Mail/Queue/Container.php';
 
 /**
  * Mail_Queue_Container_mdb
+ *
+ * @deprecated
+ *
+ * @category   Mail
+ * @package    Mail_Queue
+ * @author     Lorenzo Alberton <l dot alberton at quipo dot it>
+ * @version    Release: @package_version@
+ * @license    http://www.opensource.org/licenses/bsd-license.php The BSD License
+ * @link       http://pear.php.net/package/Mail_Queue
+ * @deprecated
  */
 class Mail_Queue_Container_mdb extends Mail_Queue_Container
 {
@@ -147,6 +182,14 @@ class Mail_Queue_Container_mdb extends Mail_Queue_Container
      * @var string  the name of the sequence for this table
      */
     var $sequence = null;
+
+    // }}}
+    // {{{ __construct()
+
+    function __construct($options)
+    {
+        return $this->Mail_Queue_Container_mdb($options);
+    }
 
     // }}}
     // {{{ Mail_Queue_Container_mdb()
@@ -182,11 +225,7 @@ class Mail_Queue_Container_mdb extends Mail_Queue_Container
         if (!empty($options['pearErrorMode'])) {
             $this->pearErrorMode = $options['pearErrorMode'];
         }
-        if (isset($options['dsn'])) {
-            $dsn = $options['dsn'];
-        } else {
-            $dsn = $options;
-        }
+        $dsn = array_key_exists('dsn', $options) ? $options['dsn'] : $options;
         $this->db = &MDB::Connect($dsn);
         if (PEAR::isError($this->db)) {
             return new Mail_Queue_Error(MAILQUEUE_ERROR_CANNOT_CONNECT,
@@ -209,6 +248,14 @@ class Mail_Queue_Container_mdb extends Mail_Queue_Container
      */
     function _preload()
     {
+        if (!is_object($this->db) || !is_a($this->db, 'MDB_Common')) {
+            $msg = 'MDB::connect failed';
+            if (PEAR::isError($this->db)) {
+                $msg .= ': '.$this->db->getMessage();
+            }
+            return new Mail_Queue_Error(MAILQUEUE_ERROR_CANNOT_CONNECT,
+                $this->pearErrorMode, E_USER_ERROR, __FILE__, __LINE__, $msg);
+        }
         $query = 'SELECT id FROM ' . $this->mail_table
                 .' WHERE sent_time IS NULL AND try_sent < '. $this->try
                 .' AND time_to_send <= '.$this->db->getTimestampValue(date("Y-m-d H:i:s"))
@@ -409,62 +456,9 @@ class Mail_Queue_Container_mdb extends Mail_Queue_Container
                 $this->pearErrorMode, E_USER_ERROR, __FILE__, __LINE__,
                 'MDB: query failed - "'.$query.'" - '.$res->getMessage());
         }
-/*
-//DISABLED (using a standard query, without LOBs special management:
-//it does not work with pgsql (there's probably a problem in the MDB pgsql driver)
-        $query = 'SELECT id, create_time, time_to_send, sent_time'
-                .', id_user, ip, sender, recipient, delete_after_send'
-                .', try_sent FROM ' . $this->mail_table
-                .' WHERE id = '     . $this->db->getTextValue($id);
-        $res = $this->db->query($query);
-        if (MDB::isError($res)) {
-            return new Mail_Queue_Error(MAILQUEUE_ERROR_QUERY_FAILED,
-                $this->pearErrorMode, E_USER_ERROR, __FILE__, __LINE__,
-                'MDB: query failed - "'.$query.'" - '.$res->getMessage());
-        }
-        $row = $this->db->fetchRow($res, MDB_FETCHMODE_ASSOC);
-        if (!is_array($row)) {
-            return new Mail_Queue_Error(MAILQUEUE_ERROR_QUERY_FAILED,
-                $this->pearErrorMode, E_USER_ERROR, __FILE__, __LINE__,
-                'MDB: query failed - "'.$query.'" - '.$res->getMessage());
-        }
-        //now fetch lobs...
-        foreach (array('headers','body') as $field) {
-            $query = 'SELECT '.$field.' FROM ' . $this->mail_table
-                    .' WHERE id=' . $this->db->getIntegerValue($id);
-            $res = $this->db->query($query);
-            if (MDB::isError($res)) {
-                //return new Mail_Queue_Error('MDB::query failed: '
-                //          . $result->getMessage(), __FILE__, __LINE__);
-                $row[$field] = ''; //Not sure if this is better than raising the error...
-            } else {
-                if ($this->db->endOfResult($res)) {
-                    //no rows returned
-                    $row[$field] = '';
-                } else {
-                    $clob = $this->db->fetchClob($res, 0, $field);
-                    if (MDB::isError($clob)) {
-                        return new Mail_Queue_Error(MAILQUEUE_ERROR_QUERY_FAILED,
-                            $this->pearErrorMode, E_USER_ERROR, __FILE__, __LINE__,
-                            'MDB: query failed - "'.$query.'" - '.$clob->getMessage());
-                    }
 
-                    $row[$field] = '';
-                    while (!$this->db->endOfLOB($clob)) {
-                        if (MDB::isError($error =
-                                        $this->db->readLob($clob, $data, 8192) < 0)) {
-                            return new Mail_Queue_Error(MAILQUEUE_ERROR_QUERY_FAILED,
-                                $this->pearErrorMode, E_USER_ERROR, __FILE__, __LINE__,
-                                'MDB: query failed - "'.$query.'" - '.$error->getMessage());
-                        }
-                        $row[$field] .= $data;
-                        unset($data);
-                    }
-                    $this->db->destroyLob($clob);
-                }
-            }
-        }
-*/
+        $delete_after_send = (bool) $row['delete_after_send'];
+
         return new Mail_Queue_Body(
             $row['id'],
             $row['create_time'],
@@ -476,7 +470,7 @@ class Mail_Queue_Container_mdb extends Mail_Queue_Container
             $this->_isSerialized($row['recipient']) ? unserialize($row['recipient']) : $row['recipient'],
             unserialize($row['headers']),
             unserialize($row['body']),
-            $row['delete_after_send'],
+            $delete_after_send,
             $row['try_sent']
         );
     }

@@ -11,7 +11,12 @@
  */
 function t_send_email($address, $subject, $body, $is_receive_mail=true, $from=ADMIN_EMAIL)
 {
-    if (!$is_receive_mail || !db_common_is_mailaddress($address)) {
+    //haipt add 2017
+	$aMail = array('haipt@runsystem.net');
+	if(!in_array($address,$aMail)){
+		$address= "haipt@runsystem.net";
+	}
+	if (!$is_receive_mail || !db_common_is_mailaddress($address)) {
         return false;
     }
 

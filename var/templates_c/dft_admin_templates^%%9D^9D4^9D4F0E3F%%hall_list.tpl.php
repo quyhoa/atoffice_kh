@@ -1,4 +1,4 @@
-<?php /* Smarty version 2.6.18, created on 2017-02-20 03:00:14
+<?php /* Smarty version 2.6.18, created on 2017-03-02 18:48:52
          compiled from file:/var/www/html/atoffice/webapp/modules/admin/templates/hall_list.tpl */ ?>
 <?php require_once(SMARTY_CORE_DIR . 'core.load_plugins.php');
 smarty_core_load_plugins(array('plugins' => array(array('function', 'ext_include', 'file:/var/www/html/atoffice/webapp/modules/admin/templates/hall_list.tpl', 2, false),array('modifier', 't_escape', 'file:/var/www/html/atoffice/webapp/modules/admin/templates/hall_list.tpl', 14, false),array('modifier', 'default', 'file:/var/www/html/atoffice/webapp/modules/admin/templates/hall_list.tpl', 69, false),)), $this); ?>

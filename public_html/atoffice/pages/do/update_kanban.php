@@ -51,7 +51,7 @@
 */
 
 	$kanban = $_POST['kanban'];
-	$kanban = ereg_replace("'", '\\\'', $kanban);
+	$kanban = preg_replace("/'/", '\\\'', $kanban);
 
 	//print "$reserve_id<br>";
 

@@ -1,4 +1,4 @@
-<?php /* Smarty version 2.6.18, created on 2017-02-20 01:56:50
+<?php /* Smarty version 2.6.18, created on 2017-03-02 09:08:24
          compiled from file:/var/www/html/atoffice/webapp/modules/admin/templates/inc_footer.tpl */ ?>
 </div>
 

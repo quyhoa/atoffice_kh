@@ -1,8 +1,6 @@
-#AuthUserFile /var/www/html/atoffice/public_html/.htpasswd
-#AuthName "secret page"
+AuthUserFile /var/www/html/atoffice/public_html/.htpasswd
+AuthName "secret page"
 #AuthType Basic
 #require user atoffice
 #php_flag display_errors off
 #php_value date.timezone 'UTC'
-
-

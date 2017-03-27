@@ -1,4 +1,4 @@
-<?php /* Smarty version 2.6.18, created on 2017-02-20 02:57:32
+<?php /* Smarty version 2.6.18, created on 2017-03-02 09:07:42
          compiled from file:/var/www/html/atoffice/webapp/modules/pc/templates/o_login.tpl */ ?>
 <?php require_once(SMARTY_CORE_DIR . 'core.load_plugins.php');
 smarty_core_load_plugins(array('plugins' => array(array('modifier', 't_escape', 'file:/var/www/html/atoffice/webapp/modules/pc/templates/o_login.tpl', 564, false),array('modifier', 'nl2br', 'file:/var/www/html/atoffice/webapp/modules/pc/templates/o_login.tpl', 564, false),array('modifier', 't_url2cmd', 'file:/var/www/html/atoffice/webapp/modules/pc/templates/o_login.tpl', 564, false),array('modifier', 't_cmd', 'file:/var/www/html/atoffice/webapp/modules/pc/templates/o_login.tpl', 564, false),array('modifier', 't_decoration', 'file:/var/www/html/atoffice/webapp/modules/pc/templates/o_login.tpl', 564, false),array('block', 't_form_block', 'file:/var/www/html/atoffice/webapp/modules/pc/templates/o_login.tpl', 638, false),array('function', 't_url', 'file:/var/www/html/atoffice/webapp/modules/pc/templates/o_login.tpl', 651, false),)), $this); ?>
@@ -81,7 +81,7 @@ function setMsgTenmetu(cf, year1, month1, day1, week){
     }
 }
 
-function reserve_form(type, number, room_id, room_name, discount){alert();
+function reserve_form(type, number, room_id, room_name, discount){
 
 	if(document.getElementById("rid").value && document.getElementById("rid").value!=room_id){
 		alert('2部屋以上を同時にご予約の場合は、1部屋1日毎に「予約追加」を押して登録してから次のご予約をお申し込みください。\n\n複数予約は予約担当が代行もいたします。\n\n《03-5465-5506》までお電話ください。');

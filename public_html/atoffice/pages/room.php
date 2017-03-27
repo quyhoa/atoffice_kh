@@ -1,6 +1,6 @@
 <?php
+
 function db_get_all($sql, $db){
-	$rows = array();
 	$result = mysql_query($sql, $db);
 	while($item = mysql_fetch_assoc($result)){
 		$rows[]=$item;
@@ -52,6 +52,7 @@ function db_get_all($sql, $db){
 	$room_data = $room_data[0];
 
 
+
 // 有効な備品リスト
 	$sql = "select * from a_vessel_data where hall_id = $hall_id and flag=1";	$vessel_list = db_get_all($sql, $db);
 
@@ -68,6 +69,7 @@ function db_get_all($sql, $db){
 		}
 	}
 
+
 // 有効なサービスリスト
 	$sql = "select * from a_service_data where hall_id = $hall_id and flag=1";
 	$service_list = db_get_all($sql, $db);
@@ -75,11 +77,10 @@ function db_get_all($sql, $db){
 		$service_list[$key]['used_room']="";
 		$sql = "select room_id from a_room_service where service_id = ".$value['service_id'];
 		$room_id_service = db_get_all($sql, $db);
-		if(!empty($room_id_service[0]['room_id'])){
+		if($room_id_service[0]['room_id']){
 			foreach($room_id_service as $v){
 				$sql="select room_name from a_room where hall_id = $hall_id and room_id = ".$v['room_id'];
 				$room_name_service = db_get_all($sql, $db);
-				$service_list[$key]['used_room_service'] = isset($service_list[$key]['used_room_service']) ? $service_list[$key]['used_room_service'] : '';
 				$service_list[$key]['used_room_service'].= $room_name_service[0]['room_name']."\n";
 			}
 		}
@@ -133,7 +134,7 @@ if ($vessel_list){
 		print $item['vessel_name']."</td>";
 		print "<td>".$item['price']."円</td>";
 		print "<td>";
-		if (isset($item['charge_devision==1']) && $item['charge_devision==1']){
+		if ($item['charge_devision==1']){
 			print "予約毎";
 		}else{
 			print "時間毎";
@@ -177,7 +178,6 @@ if ($service_list){
 		print "<td>".$item['minimum_orders']."</td>";
 		print "<td valign=top>";
 		print "<div align=left>";
-		$item['used_room_service'] = isset($item['used_room_service']) ? $item['used_room_service'] : '';
 		print nl2br($item['used_room_service']);
 		print "</div>";
 		print "</td>";
@@ -248,6 +248,7 @@ foreach ($room_data as $item){
 	print $item['cancel_list']['day1']."日前まで".$item['cancel_list']['percent1']."%";
 	print "</span>";
 	print "</td>";
+
 	if ($item['cancel_list']['day2']){
 		print "<td>";
 		print "<span style='margin:2px'>";
